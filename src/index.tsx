@@ -6,6 +6,7 @@ import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
 
+
 import {e} from "./utils/encryption"
 import Settings from "./components/Settings"
 
@@ -14,10 +15,12 @@ const Patcher = create('K2geLocker')
 // モジュール読み込み
 const [
     Messages,
-    LazyActionSheet
+    LazyActionSheet,
+    GuildTooltipActionSheets
 ] = bulk(
     filters.byName('MessagesConnected', false),
-    filters.byProps("openLazy", "hideActionSheet")
+    filters.byProps("openLazy", "hideActionSheet"),
+    filters.byName('GuildTooltipActionSheets', false)
 )
 
 // アセット資源
@@ -40,11 +43,15 @@ const K2geLocker: Plugin = {
         // 変数設定
         let cache_guild = "0"
         let n = this.name
+        // サーバー読み込み
+        Patcher.instead(GuildTooltipActionSheets, "default", (self, args, org) => {
+            cache_guild = args[0]["guildId"] // 現在選択しているサーバーのIDを取得
+            return org.apply(self, args)
+        })
         // チャンネル読み込み
         Patcher.instead(Messages, 'default', (self, args, org) => {
             let res = org.apply(self, args)
             let guild_id = res?.props?.guildId
-            cache_guild = guild_id // キャッシュ
             if (guild_id && get(this.name, guild_id)) { // ロック時はビューを置換(DM等の例外処理として?でnullへ)
                 const styles = StyleSheet.createThemedStyleSheet({
                     image: {
@@ -121,44 +128,41 @@ const K2geLocker: Plugin = {
         })
         // メニュー選択画面
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
-                let component = args[0]
-                let sheet = args[1]
-                console.log(sheet) //
-                if (sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) { // 招待画面のフック
-                    Dialog.show({
-                        title: "K2geLocker",
-                        body: "Select an action you wanna perform:",
-                        confirmText: "Lock the Server",
-                        cancelText: "Open invite menu",
-                        onConfirm: () => {  // ロックを有効にするボタンで置換
-                            if (get(this.name, "passcode") === undefined) {
-                                Toasts.open({
-                                    content: "Please set passcode in plugin setting before you lock the server!",
-                                    source: FailIcon
-                                })
-                            } else if (cache_guild == "0") {
-                                Toasts.open({
-                                    content: "It seems that plugin failed to get the server. Please select another channel and try again!",
-                                    source: FailIcon
-                                })
-                            } else {
-                                set(this.name, cache_guild, true)
-                                Toasts.open({
-                                    content: "Successfully locked!",
-                                    source: StarIcon
-                                })
-                            }
-                        },
-                        onCancel: () => {  // 元の招待画面を開く
-                            org.apply(self, args)
+            let component = args[0]
+            let sheet = args[1]
+            if (sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) { // 招待画面のフック
+                Dialog.show({
+                    title: "K2geLocker",
+                    body: "Select an action you wanna perform:",
+                    confirmText: "Lock the Server",
+                    cancelText: "Open invite menu",
+                    onConfirm: () => {  // ロックを有効にするボタンで置換
+                        if (get(this.name, "passcode") === undefined) {
+                            Toasts.open({
+                                content: "Please set passcode in plugin setting before you lock the server!",
+                                source: FailIcon
+                            })
+                        } else if (cache_guild == "0") {
+                            Toasts.open({
+                                content: "It seems that plugin failed to get the server. Please select another channel and try again!",
+                                source: FailIcon
+                            })
+                        } else {
+                            set(this.name, cache_guild, true)
+                            Toasts.open({
+                                content: "Successfully locked!",
+                                source: StarIcon
+                            })
                         }
-                    })
-                } else {
-                    org.apply(self, args)
-                }
+                    },
+                    onCancel: () => {  // 元の招待画面を開く
+                        org.apply(self, args)
+                    }
+                })
+            } else {
+                org.apply(self, args)
             }
-        )
-
+        })
     },
     onStop() {
         Patcher.unpatchAll()

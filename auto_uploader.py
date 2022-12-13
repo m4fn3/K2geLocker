@@ -27,6 +27,7 @@ with paramiko.SSHClient() as ssh:
         if filepath in [r".\src\index.tsx", r".\src\components\Settings.tsx"]:
             os.system("npm run build")
             client.put("./dist/K2geLocker.js", plugin_dir)
+            ssh.exec_command(f"{plugin_dir}K2geLocker.js.disable")
 
 
     event_handler = PatternMatchingEventHandler(["*"])
