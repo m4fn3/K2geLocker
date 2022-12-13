@@ -32,7 +32,7 @@ const FailIcon = getIDByName('Small')
 
 const K2geLocker: Plugin = {
     name: 'K2geLocker',
-    version: '1.0.1',
+    version: '1.0.2',
     description: 'Lock the specific server with passcode.',
     authors: [
         {
@@ -46,6 +46,9 @@ const K2geLocker: Plugin = {
         // 変数設定
         let cache_guild = "0"
         let n = this.name
+        if (get(this.name, "inv_hijack") === undefined){
+            set(this.name, "inv_hijack", true)
+        }
         // サーバー読み込み
         Patcher.instead(GuildTooltipActionSheets, "default", (self, args, org) => {
             cache_guild = args[0]["guildId"] // 現在選択しているサーバーのIDを取得
@@ -131,9 +134,8 @@ const K2geLocker: Plugin = {
         })
         // メニュー選択画面
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
-            let component = args[0]
             let sheet = args[1]
-            if (sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) { // 招待画面のフック
+            if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(this.name, "inv_hijack")) { // 招待画面のフック
                 Dialog.show({
                     title: "K2geLocker",
                     body: "Select an action you wanna perform:",
