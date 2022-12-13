@@ -46,7 +46,7 @@ const K2geLocker: Plugin = {
         // variables
         let cache_guild = "0"
         let n = this.name
-        if (get(this.name, "inv_hijack") === undefined){
+        if (get(this.name, "inv_hijack") === undefined) {
             set(this.name, "inv_hijack", true)
         }
         // on select server
@@ -136,35 +136,44 @@ const K2geLocker: Plugin = {
         // on open invite menu
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
             let sheet = args[1]
+            console.log(sheet)
             if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(this.name, "inv_hijack")) {
-                Dialog.show({
-                    title: "K2geLocker",
-                    body: "Select an action you wanna perform:",
-                    confirmText: "Lock the Server",
-                    cancelText: "Open invite menu",
-                    onConfirm: () => {
-                        if (get(this.name, "passcode") === undefined) {
-                            Toasts.open({
-                                content: "Please set passcode in plugin setting before you lock the server!",
-                                source: FailIcon
-                            })
-                        } else if (cache_guild == "0") {
-                            Toasts.open({
-                                content: "It seems that plugin failed to get the server. Please select another channel and try again!",
-                                source: FailIcon
-                            })
-                        } else {
-                            set(this.name, cache_guild, true)
-                            Toasts.open({
-                                content: "Successfully locked!",
-                                source: StarIcon
-                            })
+                if (get(this.name, cache_guild)) {
+                    Dialog.show({
+                        title: "K2geLocker",
+                        body: "This server is locked",
+                        confirmText: "Ok"
+                    })
+                } else {
+                    Dialog.show({
+                        title: "K2geLocker",
+                        body: "Select an action",
+                        confirmText: "Lock the Server",
+                        cancelText: "Open invite menu",
+                        onConfirm: () => {
+                            if (get(this.name, "passcode") === undefined) {
+                                Toasts.open({
+                                    content: "Please set passcode in plugin setting before you lock the server!",
+                                    source: FailIcon
+                                })
+                            } else if (cache_guild == "0") {
+                                Toasts.open({
+                                    content: "It seems that plugin failed to get the server. Please select another channel and try again!",
+                                    source: FailIcon
+                                })
+                            } else {
+                                set(this.name, cache_guild, true)
+                                Toasts.open({
+                                    content: "Successfully locked!",
+                                    source: StarIcon
+                                })
+                            }
+                        },
+                        onCancel: () => {  // open original menu
+                            org.apply(self, args)
                         }
-                    },
-                    onCancel: () => {  // open original menu
-                        org.apply(self, args)
-                    }
-                })
+                    })
+                }
             } else {
                 org.apply(self, args)
             }
