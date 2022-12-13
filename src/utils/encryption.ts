@@ -1,10 +1,10 @@
 
 function e(text, key) {
-    let result = '';
+    let result = ''
     for (let i = 0; i < text.length; i++) {
-        result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length))
     }
-    return result;
+    return result
 }
 
 export {e}

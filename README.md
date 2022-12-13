@@ -7,7 +7,7 @@ https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 
 ## Usage
 - Set your passcode in plugin setting.
-- Tap "Invite" button and select "Lock the Server" to lock the server.
+- Tap "Invite" button and select "Lock the Server" to lock the server.<br>Also you can use /lock command to lock the server.
 - Select any channel in that server and enter passcode to unlock the server.
 
 ## ScreenShot

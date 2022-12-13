@@ -9,6 +9,7 @@ import {getIDByName} from "enmity/api/assets"
 
 import {e} from "./utils/encryption"
 import Settings from "./components/Settings"
+import lock from "./components/Commands"
 
 const Patcher = create('K2geLocker')
 
@@ -40,6 +41,8 @@ const K2geLocker: Plugin = {
         }
     ],
     onStart() {
+        // コマンド追加
+        this.commands = [lock]
         // 変数設定
         let cache_guild = "0"
         let n = this.name
@@ -165,6 +168,7 @@ const K2geLocker: Plugin = {
         })
     },
     onStop() {
+        this.commands = []
         Patcher.unpatchAll()
     },
     getSettingsPanel({settings}) {
