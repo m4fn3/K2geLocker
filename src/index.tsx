@@ -13,7 +13,7 @@ import lock from "./components/Commands"
 
 const Patcher = create('K2geLocker')
 
-// モジュール読み込み
+// get modules
 const [
     Messages,
     LazyActionSheet,
@@ -24,7 +24,7 @@ const [
     filters.byName('GuildTooltipActionSheets', false)
 )
 
-// アセット資源
+// asset resources
 const LockIcon = getIDByName('nsfw_gate_lock')
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
@@ -41,24 +41,24 @@ const K2geLocker: Plugin = {
         }
     ],
     onStart() {
-        // コマンド追加
+        // add command
         this.commands = [lock]
-        // 変数設定
+        // variables
         let cache_guild = "0"
         let n = this.name
         if (get(this.name, "inv_hijack") === undefined){
             set(this.name, "inv_hijack", true)
         }
-        // サーバー読み込み
+        // on select server
         Patcher.instead(GuildTooltipActionSheets, "default", (self, args, org) => {
-            cache_guild = args[0]["guildId"] // 現在選択しているサーバーのIDを取得
+            cache_guild = args[0]["guildId"] // cache selected server id
             return org.apply(self, args)
         })
-        // チャンネル読み込み
+        // on load channel
         Patcher.instead(Messages, 'default', (self, args, org) => {
             let res = org.apply(self, args)
             let guild_id = res?.props?.guildId
-            if (guild_id && get(this.name, guild_id)) { // ロック時はビューを置換(DM等の例外処理として?でnullへ)
+            if (guild_id && get(this.name, guild_id)) { // replace return view
                 const styles = StyleSheet.createThemedStyleSheet({
                     image: {
                         width: 100,
@@ -108,13 +108,14 @@ const K2geLocker: Plugin = {
                         style={styles.passcode}
                         onSubmitEditing={
                             (event) => {
-                                if (event.nativeEvent.text == e(get(this.name, "passcode"), `${n[0]}${n[1]}${n[4]}`)) { // パスワード確認
+                                // password certification
+                                if (event.nativeEvent.text == e(get(this.name, "passcode"), `${n[0]}${n[1]}${n[4]}`)) {
                                     set(this.name, guild_id, false)
                                     Toasts.open({
                                         content: "Successfully unlocked!",
                                         source: StarIcon
                                     })
-                                } else { // 不一致
+                                } else {
                                     Toasts.open({
                                         content: "Incorrect password. Try again.",
                                         source: FailIcon
@@ -132,16 +133,16 @@ const K2geLocker: Plugin = {
                 return res
             }
         })
-        // メニュー選択画面
+        // on open invite menu
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
             let sheet = args[1]
-            if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(this.name, "inv_hijack")) { // 招待画面のフック
+            if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(this.name, "inv_hijack")) {
                 Dialog.show({
                     title: "K2geLocker",
                     body: "Select an action you wanna perform:",
                     confirmText: "Lock the Server",
                     cancelText: "Open invite menu",
-                    onConfirm: () => {  // ロックを有効にするボタンで置換
+                    onConfirm: () => {
                         if (get(this.name, "passcode") === undefined) {
                             Toasts.open({
                                 content: "Please set passcode in plugin setting before you lock the server!",
@@ -160,7 +161,7 @@ const K2geLocker: Plugin = {
                             })
                         }
                     },
-                    onCancel: () => {  // 元の招待画面を開く
+                    onCancel: () => {  // open original menu
                         org.apply(self, args)
                     }
                 })

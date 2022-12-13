@@ -9,12 +9,12 @@ interface SettingsProps {
     settings: SettingsStore
 }
 
-// 変数設定
+// variables
 const n = "Love K2ge3 lol"
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
 
-// 設定メニュー用
+// setting menu
 export default ({settings}: SettingsProps) => {
     return (
         <View>
