@@ -1,4 +1,4 @@
-import {FormInput, View, FormSection, FormDivider,FormRow,FormSwitch} from "enmity/components"
+import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch} from "enmity/components"
 import {SettingsStore} from "enmity/api/settings"
 import {React, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
@@ -42,19 +42,18 @@ export default ({settings}: SettingsProps) => {
                     }
                     secureTextEntry={true}
                 />
-
-            <FormDivider/>
-            <FormRow
-                label="Enable invitation menu hijacking"
-                trailing={
-                    <FormSwitch
-                        value={settings.getBoolean("inv_hijack", true)}
-                        onValueChange={(value) => {
-                            settings.set("inv_hijack", value)
-                        }}
-                    />
-                }
-            />
+                <FormDivider/>
+                <FormRow
+                    label="Enable invitation menu hijacking"
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("inv_hijack", true)}
+                            onValueChange={(value) => {
+                                settings.set("inv_hijack", value)
+                            }}
+                        />
+                    }
+                />
             </FormSection>
         </View>
     )

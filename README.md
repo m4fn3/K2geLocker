@@ -13,4 +13,4 @@ https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 ## ScreenShot
 ![IMG_4450](https://user-images.githubusercontent.com/43488869/207329777-3f80f08d-3ebc-4c13-9ddd-24739063219e.png)
 ![IMG_4448](https://user-images.githubusercontent.com/43488869/206190833-b6efd2fb-4399-4127-89bd-b23a29cfcfe5.png)
-![IMG_4487](https://user-images.githubusercontent.com/43488869/207325951-55e979e3-0698-4d5e-a086-6f28586babee.png)
+![IMG_4489](https://user-images.githubusercontent.com/43488869/207371037-464767ae-e321-4456-9b51-7ba213547002.png)

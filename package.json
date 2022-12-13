@@ -1,9 +1,9 @@
 {
-   "name": "plugin-template",
-   "description": "Template for enmity plugins.",
-   "version": "1.0.0",
+   "name": "k2ge-locker",
+   "description": "A plugin of Enmity to lock the specific server with passcode.",
+   "version": "1.0.2",
    "license": "GPL-3.0",
-   "author": "Zoey & eternal",
+   "author": "mafu (Zoey & eternal for template)",
    "scripts": {
       "build": "rollup -c --configPlugin esbuild"
    },
