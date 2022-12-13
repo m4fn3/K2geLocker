@@ -6,10 +6,9 @@ Add this download link in plugin setting of Enmity.
 https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 
 ## Usage
-- To lock the server, tap "Invite" button and select "Lock the Guild".
-- To unlock the server, select any channel in that server and enter passcode.
-<br>* Using custom passcode is remained to be implemented. For now, please use "pass".
-<br>* Alternatively, you can edit source code to manually set the custom passcode.
+- Set your passcode in plugin setting.
+- Tap "Invite" button and select "Lock the Guild" to lock the server.
+- Select any channel in that server and enter passcode to unlock the server.
 
 ## ScreenShot
 ![IMG_4450](https://user-images.githubusercontent.com/43488869/206191070-5c94575b-d784-4649-808a-1e82667c9926.png)

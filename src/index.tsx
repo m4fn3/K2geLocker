@@ -1,13 +1,15 @@
-import {StyleSheet, Constants, Dialog, React, Toasts} from 'enmity/metro/common';
-import {Plugin, registerPlugin} from 'enmity/managers/plugins';
-import {bulk, filters} from 'enmity/metro';
-import {Image, Text, View, TextInput} from 'enmity/components';
-import {get, set} from 'enmity/api/settings';
+import {StyleSheet, Constants, Dialog, React, Toasts} from 'enmity/metro/common'
+import {Plugin, registerPlugin} from 'enmity/managers/plugins'
+import {bulk, filters} from 'enmity/metro'
+import {Image, Text, View, TextInput} from 'enmity/components'
+import {get, set} from 'enmity/api/settings'
+import {create} from 'enmity/patcher'
+import {getIDByName} from "enmity/api/assets"
 
-import {create} from 'enmity/patcher';
-import {getIDByName} from "enmity/api/assets";
+import {e} from "./utils/encryption"
+import Settings from "./components/Settings"
 
-const Patcher = create('K2geLocker');
+const Patcher = create('K2geLocker')
 
 // モジュール読み込み
 const [
@@ -16,17 +18,18 @@ const [
 ] = bulk(
     filters.byName('MessagesConnected', false),
     filters.byProps("openLazy", "hideActionSheet")
-);
+)
 
 // アセット資源
-const LockIcon = getIDByName('nsfw_gate_lock');
+const LockIcon = getIDByName('nsfw_gate_lock')
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
 
+
 const K2geLocker: Plugin = {
     name: 'K2geLocker',
-    version: '1.0.0',
-    description: 'Lock ur <3',
+    version: '1.0.1',
+    description: 'Lock the specific server with passcode.',
     authors: [
         {
             name: 'mafu',
@@ -34,10 +37,11 @@ const K2geLocker: Plugin = {
         }
     ],
     onStart() {
-        let cache_guild = "0" // TODO: 直接ロックすると値が更新されない問題
+        // 変数設定
+        let cache_guild = "0"
+        let n = this.name
         // チャンネル読み込み
         Patcher.instead(Messages, 'default', (self, args, org) => {
-            console.log("[K2geLocker] ON_LOAD_MESSAGES")
             let res = org.apply(self, args)
             let guild_id = res?.props?.guildId
             cache_guild = guild_id // キャッシュ
@@ -81,7 +85,7 @@ const K2geLocker: Plugin = {
                         borderBottomWidth: 1,
                         borderBottomColor: "#ccc"
                     }
-                });
+                })
                 return <View style={styles.container}>
                     <Image style={styles.image} source={LockIcon}/>
                     <Text style={styles.header}>
@@ -91,9 +95,8 @@ const K2geLocker: Plugin = {
                         style={styles.passcode}
                         onSubmitEditing={
                             (event) => {
-                                if (event.nativeEvent.text == "pass") { // パスワード確認 TODO: パスワード設定画面作成
+                                if (event.nativeEvent.text == e(get(this.name, "passcode"), `${n[0]}${n[1]}${n[4]}`)) { // パスワード確認
                                     set(this.name, guild_id, false)
-                                    console.log("[K2geLocker] Set: FALSE")
                                     Toasts.open({
                                         content: "Successfully unlocked!",
                                         source: StarIcon
@@ -111,45 +114,59 @@ const K2geLocker: Plugin = {
                     <Text style={styles.description}>
                         K2geLocker
                     </Text>
-                </View>;
+                </View>
             } else {
                 return res
             }
-        });
+        })
         // メニュー選択画面
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
-            let component = args[0]
-            let sheet = args[1]
-            if (sheet.startsWith("instant-invite")) { // 招待画面のフック
-                console.log("[K2geLocker] ON_INVITE_MENU")
-                Dialog.show({
-                    title: "K2geLocker",
-                    body: "Select an action you wanna perform:",
-                    confirmText: "Lock the Guild",
-                    cancelText: "Open invite menu",
-                    onConfirm: () => {  // ロックを有効にするボタンで置換
-                        console.log("[K2geLocker] Confirm")
-                        set(this.name, cache_guild, true)
-                        console.log("[K2geLocker] Set: TRUE")
-                        Toasts.open({
-                            content: "Successfully locked!",
-                            source: StarIcon
-                        })
-                    },
-                    onCancel: () => {  // 元の招待画面を開く
-                        console.log("[K2geLocker] Cancel")
-                        org.apply(self, args)
-                    }
-                })
-            } else {
-                org.apply(self, args)
+                let component = args[0]
+                let sheet = args[1]
+                console.log(sheet) //
+                if (sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) { // 招待画面のフック
+                    Dialog.show({
+                        title: "K2geLocker",
+                        body: "Select an action you wanna perform:",
+                        confirmText: "Lock the Server",
+                        cancelText: "Open invite menu",
+                        onConfirm: () => {  // ロックを有効にするボタンで置換
+                            if (get(this.name, "passcode") === undefined) {
+                                Toasts.open({
+                                    content: "Please set passcode in plugin setting before you lock the server!",
+                                    source: FailIcon
+                                })
+                            } else if (cache_guild == "0") {
+                                Toasts.open({
+                                    content: "It seems that plugin failed to get the server. Please select another channel and try again!",
+                                    source: FailIcon
+                                })
+                            } else {
+                                set(this.name, cache_guild, true)
+                                Toasts.open({
+                                    content: "Successfully locked!",
+                                    source: StarIcon
+                                })
+                            }
+                        },
+                        onCancel: () => {  // 元の招待画面を開く
+                            org.apply(self, args)
+                        }
+                    })
+                } else {
+                    org.apply(self, args)
+                }
             }
-        })
+        )
 
     },
     onStop() {
-        Patcher.unpatchAll();
+        Patcher.unpatchAll()
+    },
+    getSettingsPanel({settings}) {
+        return <Settings settings={settings}/>
     }
-};
+}
 
-registerPlugin(K2geLocker);
+
+registerPlugin(K2geLocker)

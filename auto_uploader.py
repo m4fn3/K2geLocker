@@ -14,6 +14,7 @@ load_dotenv(join(dirname(__file__), '.env'))
 ip = "192.168.11.7"
 user = "root"
 password = os.getenv("password")
+plugin_dir = "/var/mobile/Containers/Data/Application/F8279772-F3E0-4ADE-8E01-E996FFE32FC9/Documents/Plugins/"
 with paramiko.SSHClient() as ssh:
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(ip, port=22, username=user, password=password)
@@ -23,9 +24,9 @@ with paramiko.SSHClient() as ssh:
     def on_modified(event):
         filepath = event.src_path
         print(f"{filepath}")
-        if filepath == r".\src\index.tsx":
+        if filepath in [r".\src\index.tsx", r".\src\components\Settings.tsx"]:
             os.system("npm run build")
-            client.put("./dist/K2geLocker.js", "/var/mobile/Containers/Data/Application/682C29DA-0995-431A-8F7E-66368B706006/Documents/Plugins/")
+            client.put("./dist/K2geLocker.js", plugin_dir)
 
 
     event_handler = PatternMatchingEventHandler(["*"])
