@@ -60,49 +60,51 @@ const K2geLocker: Plugin = {
             let guild_id = res?.props?.guildId
             if (guild_id && get(this.name, guild_id)) { // replace return view
                 const styles = StyleSheet.createThemedStyleSheet({
-                    image: {
-                        width: 100,
-                        height: 100,
-                        padding: 5,
-                        marginBottom: 15
-                    },
                     container: {
+                        fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
                         flex: 1,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: Constants.ThemeColorMap.BACKGROUND_PRIMARY,
+                        backgroundColor: Constants.ThemeColorMap.BACKGROUND_PRIMARY
+                    },
+                    image: {
+                        width: 120,
+                        height: 120,
+                        padding: 5,
+                        marginBottom: 30
                     },
                     header: {
                         color: Constants.ThemeColorMap.HEADER_PRIMARY,
-                        fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
                         fontWeight: 'bold',
-                        fontSize: 24
+                        fontSize: 25
                     },
-                    description: {
+                    text: {
                         color: Constants.ThemeColorMap.HEADER_SECONDARY,
-                        fontSize: 16,
-                        fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
-                        marginLeft: 2.5,
-                        marginRight: 2.5,
-                        marginBottom: 70,
-                        paddingLeft: 25,
-                        paddingRight: 25,
-                        paddingTop: 5,
-                        textAlign: 'center'
+                        fontSize: 16
                     },
                     passcode: {
                         width: 100,
                         height: 20,
-                        marginTop: 50,
-                        marginBottom: 50,
-                        borderBottomWidth: 1,
-                        borderBottomColor: "#ccc"
+                        marginTop: 30,
+                        borderWidth: 1,
+                        borderColor: Constants.ThemeColorMap.HEADER_SECONDARY,
+                        backgroundColor: Constants.ThemeColorMap.HEADER_SECONDARY
+                    },
+                    footer: {
+                        color: Constants.ThemeColorMap.HEADER_SECONDARY,
+                        fontSize: 16,
+                        marginTop: 100,
+                        marginBottom: 70
                     }
                 })
+
                 return <View style={styles.container}>
                     <Image style={styles.image} source={LockIcon}/>
                     <Text style={styles.header}>
                         This server is locked!
+                    </Text>
+                    <Text style={styles.text}>
+                        enter passcode to unlock
                     </Text>
                     <TextInput
                         style={styles.passcode}
@@ -125,7 +127,7 @@ const K2geLocker: Plugin = {
                         }
                         secureTextEntry={true}
                     />
-                    <Text style={styles.description}>
+                    <Text style={styles.footer}>
                         K2geLocker
                     </Text>
                 </View>
