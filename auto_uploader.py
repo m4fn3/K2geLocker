@@ -1,38 +1,44 @@
+# ------------------------------------------------------------------------------------------
+# Simple python script to automatically build and send plugin to idevice on editing files
+# - openssh need to be installed on idevice
+# - config your ip/user/password/plugin_dir/plugin_name first
+# ------------------------------------------------------------------------------------------
+# by https://github.com/m4fn3
+
+import os
+import paramiko
+import scp
+import time
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
-import os
-import scp
-import paramiko
-import time
-import os
-from os.path import join, dirname
-from dotenv import load_dotenv
 
-load_dotenv(verbose=True)
-load_dotenv(join(dirname(__file__), '.env'))
-
+# ***** config *****************************
 ip = "192.168.11.7"
 user = "root"
-password = os.getenv("password")
+password = "alpine"
 plugin_dir = "/var/mobile/Containers/Data/Application/F8279772-F3E0-4ADE-8E01-E996FFE32FC9/Documents/Plugins/"
+plugin_name = "K2geLocker"
+
+
+# listener
+def on_modified(event):
+    filepath = event.src_path
+    filename = filepath.split("\\")[-1]
+    if "~" not in filename and "." in filename:
+        os.system("npm run build")  # build
+        client.put(f"./dist/{plugin_name}.js", plugin_dir)  # make sure that plugin name and file name is the same or you will face weird bugs
+        ssh.exec_command(f"rm {plugin_dir}K2geLocker.js.disable")  # remove disable stat if exists
+
+
+# ssh connection
 with paramiko.SSHClient() as ssh:
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(ip, port=22, username=user, password=password)
     client = scp.SCPClient(ssh.get_transport())
 
-
-    def on_modified(event):
-        filepath = event.src_path
-        print(f"{filepath}")
-        if filepath in [r".\src\index.tsx", r".\src\components\Settings.tsx"]:
-            os.system("npm run build")
-            client.put("./dist/K2geLocker.js", plugin_dir)
-            ssh.exec_command(f"{plugin_dir}K2geLocker.js.disable")
-
-
-    event_handler = PatternMatchingEventHandler(["*"])
+    # watch file editing
+    event_handler = PatternMatchingEventHandler([r"./src/*"])
     event_handler.on_modified = on_modified
-
     observer = Observer()
     observer.schedule(event_handler, ".", recursive=True)
     observer.start()

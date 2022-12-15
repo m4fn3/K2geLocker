@@ -14,3 +14,13 @@ https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 ![IMG_4495](https://user-images.githubusercontent.com/43488869/207774985-ed7e659b-d307-4d97-9c7a-caa9fb395b32.png)
 ![IMG_4494](https://user-images.githubusercontent.com/43488869/207774798-4195f4f1-6fec-453a-a44e-7e9c8ad108b1.png)
 ![IMG_4489](https://user-images.githubusercontent.com/43488869/207371037-464767ae-e321-4456-9b51-7ba213547002.png)
+
+## Dev
+### build
+`npm run build`
+### auto_uploader.py
+Simple python script to automatically build and send plugin to idevice on editing files
+1. openssh need to be installed on idevice
+2. config your ip/user/password/plugin_dir/plugin_name first
+3. `pip install -r requirements.txt` to install dependencies
+4. `python auto_uploader.py` to start watching

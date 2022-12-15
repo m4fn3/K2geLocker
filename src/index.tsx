@@ -190,5 +190,4 @@ const K2geLocker: Plugin = {
     }
 }
 
-
 registerPlugin(K2geLocker)
