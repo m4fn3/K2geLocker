@@ -14,7 +14,7 @@ const FailIcon = getIDByName('Small')
 
 
 // モーダル本体
-export default ({guildId}) => {
+export default ({guildId, args, fn}) => {
     // 内部のページ(変数引き継ぎのため内包)
     function page() {
         const styles = StyleSheet.createThemedStyleSheet({
@@ -71,10 +71,12 @@ export default ({guildId}) => {
                             // password certification
                             if (event.nativeEvent.text == e(get("K2geLocker", "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
                                 set("K2geLocker", guildId, false)
+                                fn(... args)  // LongPressを無理やり実行して更新することでonGuildSelectedの中身を更新
                                 Toasts.open({
                                     content: "Successfully unlocked!",
                                     source: StarIcon
                                 })
+                                Navigation.pop() // モーダルを閉じる
                             } else {
                                 Toasts.open({
                                     content: "Incorrect password. Try again.",
@@ -141,7 +143,7 @@ export default ({guildId}) => {
                             <Button
                                 color={styles.close.color}
                                 title='Close'
-                                onPress={(): void => Navigation.pop()}
+                                onPress={() => Navigation.pop()}
                             />
                         ),
                         ...NavigationStack.TransitionPresets.ModalSlideFromBottomIOS

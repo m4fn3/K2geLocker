@@ -68,7 +68,9 @@ const K2geLocker: Plugin = {
         // add command
         this.commands = [lock]
         // variables
-        let cache_guild = "0"
+        let cachedArgs = {}
+        let cachedOLP = {}
+        let cachedSelectedGuild = "0"
         let n = this.name
         if (get(this.name, "inv_hijack") === undefined) {
             set(this.name, "inv_hijack", true)
@@ -80,6 +82,7 @@ const K2geLocker: Plugin = {
             if (Guild) {
                 // guildUpdate = Guild.type.type
                 // console.log(Guild)
+
                 // Guild
                 Patcher.before(Guild.type, 'type', (self, args, res) => { // args[0]: Guild / res: Guild (同じ)
                     // console.log(`--Guild更新before--${args[0].guild.id}`)
@@ -87,38 +90,32 @@ const K2geLocker: Plugin = {
                     //     console.log("--[[[[^^^^^^^]]]] TROLL_UPDATE")
                     // }
                     // console.log(args)
+                    cachedOLP[args[0].guild.id] = args[0].onLongPress
                     // 先にロックされているかに合わせてonGuildSelectedを編集してから元の関数へ(Patcher.before)
                     if (get(this.name, args[0].guild.id)) {
                         //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
-                        // onPressは実際何もしないため置き換えて無にしても動作してしまう...
-                        args[0].onGuildSelected = (arg) => { // arg: guildId
-                            // TODO: UNLOCK
+                        args[0].onGuildSelected = (guildId) => {
+                            // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
                             Navigation.push(
-                                UnlockModal, {guildId: arg}
+                                UnlockModal, {guildId: guildId, args: cachedArgs[guildId], fn: cachedOLP[guildId]}
                             )
-                            // args[0].onLongPress(savedArgs[arg][0], savedArgs[arg][1])
                         }
                     } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
                         args[0].onGuildSelected = undefined
                     }
-                    // selectHandler[args[0].guild.id] = args[0].onLongPress
-                    // TODO: 値編集後 lock中の場合は longpressしないと更新されない問題 ->
-                    //  別の方法で更新(X) / longpressする(X) / 直接呼ぶtroll(X)
+                    // 値編集後 lock中の場合は longpressしないと更新されない問題 ->
+                    //  別の方法で更新(X) / longpressする(ぎりセーフ) / 直接呼ぶtroll(X)
                 })
-                // Patcher.after(Guild.type, 'type', (_, args, res) => {
-                //     console.log("--afterGuild更新")
-                //     args[0].onGuildSelected = undefined
-                // })
-                //
-                // Patcher.instead(Guild.props, "onPressOut", (self, args, res) => {
-                //     console.log("========onPress")
-                //     let obj = findInReactTree(args[0]._targetInst.pendingProps.children, r => r.props?.guild)
-                //     console.log(self)
-                //     console.log(args)
-                //     let f = selectHandler[obj.props.guild.id] // onLongPress
-                //     f(self, args)
-                //     return
-                // })
+                // 引数を再利用のためにキャッシュ
+                Patcher.before(Guild.props, "onPressOut", (self, args, res) => {
+                    // ( onPressは実際何もしないため置き換えて無にしても動作してしまう... )
+                    let obj = findInReactTree(args[0]._targetInst?.pendingProps?.children, r => r.props?.guild)
+                    cachedArgs[obj.props.guild.id] = [self, args]
+                })
+                Patcher.before(Guild.props, "onLongPress", (self, args, res) => {
+                    let obj = findInReactTree(args[0]._targetInst?.pendingProps?.children, r => r.props?.guild)
+                    cachedArgs[obj.props.guild.id] = [self, args]
+                })
                 return
             }
             // GuildPopoutMenu : 目的のプロパティを持つオブジェクトを探す -> 結果がundefinedでなければそれが目的のオブジェクトなのでそれをフックする
@@ -133,9 +130,8 @@ const K2geLocker: Plugin = {
                         "icon": KeyIcon2,
                         "text": "Unlock Server",
                         "onClick": () => {
-                            // TODO: UNLOCK
                             Navigation.push(
-                                UnlockModal, {guildId: args[0].guildId}
+                                UnlockModal, {guildId: args[0].guildId, args: cachedArgs[args[0].guildId], fn: cachedOLP[args[0].guildId]}
                             )
                         }
                     }]
@@ -162,6 +158,14 @@ const K2geLocker: Plugin = {
                                 // selectHandler[args[0].guildId][0]["TROLL"] = true
                                 // wrapInHooks(guildUpdate)(selectHandler[args[0].guildId][0])
                                 // console.log("wrapInHooks()")
+
+                                /*** 最悪なくても
+                                  他の鯖選択状態で別鯖ロックしたとき:一回目押したときに開けてしまうだけ(メッセージ閲覧制限はあり)
+                                  不具合のほうが深刻なのでパス ***/
+                                // LongPressを無理やり実行して更新することでonGuildSelectedの中身を更新
+                                // let fn = cachedOLP[args[0].guildId]
+                                // let fn_args = cachedArgs[args[0].guildId]
+                                // fn(... fn_args)
                                 Toasts.open({
                                     content: "Successfully locked!",
                                     source: StarIcon
@@ -192,7 +196,7 @@ const K2geLocker: Plugin = {
         })
         // on select server
         Patcher.instead(GuildTooltipActionSheets, "default", (self, args, org) => {
-            cache_guild = args[0]["guildId"] // cache selected server id
+            cachedSelectedGuild = args[0]["guildId"] // cache selected server id
             return org.apply(self, args) // 別のものを返しても全く影響なし
         })
         // on load channel
@@ -280,7 +284,7 @@ const K2geLocker: Plugin = {
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
             let sheet = args[1]
             if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(this.name, "inv_hijack")) {
-                if (get(this.name, cache_guild)) {
+                if (get(this.name, cachedSelectedGuild)) {
                     Dialog.show({
                         title: "K2geLocker",
                         body: "This server is locked",
@@ -299,7 +303,7 @@ const K2geLocker: Plugin = {
                                     source: FailIcon
                                 })
                             } else {
-                                set(this.name, cache_guild, true)
+                                set(this.name, cachedSelectedGuild, true)
                                 Toasts.open({
                                     content: "Successfully locked!",
                                     source: StarIcon
