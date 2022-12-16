@@ -103,8 +103,6 @@ const K2geLocker: Plugin = {
                     } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
                         args[0].onGuildSelected = undefined
                     }
-                    // 値編集後 lock中の場合は longpressしないと更新されない問題 ->
-                    //  別の方法で更新(X) / longpressする(ぎりセーフ) / 直接呼ぶtroll(X)
                 })
                 // 引数を再利用のためにキャッシュ
                 Patcher.before(Guild.props, "onPressOut", (self, args, res) => {
@@ -158,7 +156,6 @@ const K2geLocker: Plugin = {
                                 // selectHandler[args[0].guildId][0]["TROLL"] = true
                                 // wrapInHooks(guildUpdate)(selectHandler[args[0].guildId][0])
                                 // console.log("wrapInHooks()")
-
                                 /*** 最悪なくても
                                   他の鯖選択状態で別鯖ロックしたとき:一回目押したときに開けてしまうだけ(メッセージ閲覧制限はあり)
                                   不具合のほうが深刻なのでパス ***/

@@ -77,6 +77,9 @@ export default ({guildId, args, fn}) => {
                                     source: StarIcon
                                 })
                                 Navigation.pop() // モーダルを閉じる
+                                /** TODO: 解除後解除したサーバーのアイコンを押さないとスライドが正常に動作しなくなるため他の更新方法があればそちらの方がよい
+                                   既知のトリガーされるタイミング: 全体の読み込み/サーバーアイコンを押したとき/lock中は長押し
+                                   解決策? : 押しを偽造 : 成功するが不具合有 / 偽の更新を呼び出し(TROLL) : 成功未 / 全体読み込みして回避(?)またはそれ同等のことを行う **/
                             } else {
                                 Toasts.open({
                                     content: "Incorrect password. Try again.",
