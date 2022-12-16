@@ -24,7 +24,7 @@ plugin_name = "K2geLocker"
 def on_modified(event):
     filepath = event.src_path
     filename = filepath.split("\\")[-1]
-    if "~" not in filename and "." in filename:
+    if filepath.startswith(r".\src") and ("~" not in filename and "." in filename):
         os.system("npm run build")  # build
         client.put(f"./dist/{plugin_name}.js", plugin_dir)  # make sure that plugin name and file name is the same or you will face weird bugs
         ssh.exec_command(f"rm {plugin_dir}K2geLocker.js.disable")  # remove disable stat if exists
@@ -37,7 +37,7 @@ with paramiko.SSHClient() as ssh:
     client = scp.SCPClient(ssh.get_transport())
 
     # watch file editing
-    event_handler = PatternMatchingEventHandler([r"./src/*"])
+    event_handler = PatternMatchingEventHandler(["*"])
     event_handler.on_modified = on_modified
     observer = Observer()
     observer.schedule(event_handler, ".", recursive=True)
