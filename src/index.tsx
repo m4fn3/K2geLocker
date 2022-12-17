@@ -5,7 +5,6 @@ import {Image, Text, View, TextInput} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
-import {sendReply} from "enmity/api/clyde";
 
 
 import {e} from "./utils/encryption"
@@ -51,9 +50,8 @@ const K2geLocker: Plugin = {
         // add command
         this.commands = [lock]
         // variables
+        let handleGuildFolderExpand = () => {}
         // let previous_id = "0"
-        let handleGuildFolderExpand = () => {
-        }
         let cachedSelectedGuild = "0"
         let n = this.name
         if (get(this.name, "inv_hijack") === undefined) {
@@ -92,6 +90,7 @@ const K2geLocker: Plugin = {
                     } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
                         args[0].onGuildSelected = undefined
                     }
+                    // 以上の変更はGuild関数が呼びだされて更新したあとに適用されるのでlock状態変更時には必ず適切な関数を呼びだして更新する必要がある
                 })
                 return // Guildが見つかればもう他はチェックする必要はないので
             }
@@ -182,7 +181,7 @@ const K2geLocker: Plugin = {
                         fontSize: 16
                     },
                     passcode: {
-                        width: 100,
+                        width: 200,
                         height: 20,
                         marginTop: 30,
                         borderWidth: 1,
