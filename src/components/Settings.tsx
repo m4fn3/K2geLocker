@@ -33,8 +33,8 @@ export default ({settings}: SettingsProps) => {
             flex: 1,
             fontSize: 30,
             paddingTop: 20,
-            paddingLeft: 40,
-            color: Constants.ThemeColorMap.HEADER_SECONDARY
+            paddingLeft: 30,
+            color: Constants.ThemeColorMap.HEADER_PRIMARY
         },
         info: {
             height: 35,
