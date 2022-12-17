@@ -1,7 +1,8 @@
-import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch} from "enmity/components"
+import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch, Image} from "enmity/components"
 import {SettingsStore} from "enmity/api/settings"
 import {React, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
+import {Linking} from "enmity/metro/common";
 
 import {e} from "../utils/encryption"
 
@@ -18,7 +19,11 @@ const FailIcon = getIDByName('Small')
 export default ({settings}: SettingsProps) => {
     return (
         <View>
-            <FormSection title="Settings">
+            <Image
+                source={{uri: 'https://avatars.githubusercontent.com/u/43488869'}}
+                style={{width: 50, height: 50, marginTop: 20, marginLeft: 20}}
+            />
+            <FormSection title="SETTINGS">
                 <FormInput
                     value={settings.get("passcode")}
                     title="Passcode"
@@ -42,7 +47,6 @@ export default ({settings}: SettingsProps) => {
                     }
                     secureTextEntry={true}
                 />
-                <FormDivider/>
                 <FormRow
                     label="Enable invitation menu hijacking"
                     trailing={
@@ -53,6 +57,22 @@ export default ({settings}: SettingsProps) => {
                             }}
                         />
                     }
+                />
+            </FormSection>
+            <FormSection title="INFORMATION">
+                <FormRow
+                    label="GitHub"
+                    trailing={FormRow.Arrow}
+                    onPress={() => {
+                        Linking.openURL("https://github.com/m4fn3/K2geLocker")
+                    }}
+                />
+                <FormRow
+                    label="Twitter"
+                    trailing={FormRow.Arrow}
+                    onPress={() => {
+                        Linking.openURL("https://twitter.com/m4fn3")
+                    }}
                 />
             </FormSection>
         </View>
