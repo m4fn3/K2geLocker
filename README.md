@@ -8,7 +8,7 @@ https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 ## Usage
 - Set your passcode in plugin setting.
 - **Reload Discord after enabling plugin from setting to properly initialize K2gelocker, or you will face problems.**
-- Long press server icon and select "Lock Server" to lock the server.<br>
+- Long press server icon, and select "Lock Server" to lock the server.<br>
   Also you can tap "Invite" button and select "Lock the Server" or use /lock command to lock the server.
 - Select server icon and modal to unlock server will show up.
 

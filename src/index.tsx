@@ -202,7 +202,7 @@ const K2geLocker: Plugin = {
                         fontSize: 16
                     },
                     passcode: {
-                        width: 200,
+                        width: 100,
                         height: 20,
                         marginTop: 30,
                         borderWidth: 1,

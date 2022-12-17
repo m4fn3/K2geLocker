@@ -55,6 +55,7 @@ export default ({guildId, fn}) => {
                 marginBottom: 70
             }
         })
+
         return (
             <View style={styles.container}>
                 <Image style={styles.image} source={LockIcon}/>
