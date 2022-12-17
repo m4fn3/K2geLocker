@@ -1,6 +1,6 @@
-import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch, Image} from "enmity/components"
+import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch, Image, Text} from "enmity/components"
 import {SettingsStore} from "enmity/api/settings"
-import {React, Toasts} from "enmity/metro/common"
+import {Constants, React, StyleSheet, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
 import {Linking} from "enmity/metro/common";
 
@@ -17,12 +17,42 @@ const FailIcon = getIDByName('Small')
 
 // setting menu
 export default ({settings}: SettingsProps) => {
+    const styles = StyleSheet.createThemedStyleSheet({
+        container: {
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center"
+        },
+        image: {
+            width: 50,
+            height: 50,
+            marginTop: 20,
+            marginLeft: 20
+        },
+        description: {
+            flex: 1,
+            fontSize: 30,
+            paddingTop: 20,
+            paddingLeft: 40,
+            color: Constants.ThemeColorMap.HEADER_SECONDARY
+        },
+        info: {
+            height: 35,
+            paddingTop: 3,
+            paddingBottom: 3,
+            justifyContent: "center",
+            alignItems: "center"
+        }
+    })
     return (
         <View>
-            <Image
-                source={{uri: 'https://avatars.githubusercontent.com/u/43488869'}}
-                style={{width: 50, height: 50, marginTop: 20, marginLeft: 20}}
-            />
+            <View style={styles.container}>
+                <Image
+                    source={{uri: 'https://avatars.githubusercontent.com/u/43488869'}}
+                    style={styles.image}
+                />
+                <Text style={styles.description}>K2geLocker</Text>
+            </View>
             <FormSection title="SETTINGS">
                 <FormInput
                     value={settings.get("passcode")}
@@ -62,6 +92,7 @@ export default ({settings}: SettingsProps) => {
             <FormSection title="INFORMATION">
                 <FormRow
                     label="GitHub"
+                    style={styles.info}
                     trailing={FormRow.Arrow}
                     onPress={() => {
                         Linking.openURL("https://github.com/m4fn3/K2geLocker")
@@ -69,6 +100,7 @@ export default ({settings}: SettingsProps) => {
                 />
                 <FormRow
                     label="Twitter"
+                    style={styles.info}
                     trailing={FormRow.Arrow}
                     onPress={() => {
                         Linking.openURL("https://twitter.com/m4fn3")
