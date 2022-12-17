@@ -3,6 +3,7 @@ import {SettingsStore} from "enmity/api/settings"
 import {Constants, React, StyleSheet, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
 import {Linking} from "enmity/metro/common";
+import {reload} from "enmity/api/native"
 
 import {e} from "../utils/encryption"
 
@@ -88,6 +89,15 @@ export default ({settings}: SettingsProps) => {
                         />
                     }
                 />
+                <FormRow
+                    label="Reload Discord"
+                    style={styles.info}
+                    trailing={FormRow.Arrow}
+                    onPress={() => {
+                        reload()
+                    }}
+                />
+                <FormRow label="You need to reload Discord after enabling plugin from setting to properly initialize K2geLocker, or you will face problems." />
             </FormSection>
             <FormSection title="INFORMATION">
                 <FormRow

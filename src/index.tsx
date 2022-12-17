@@ -47,10 +47,11 @@ const K2geLocker: Plugin = {
         }
     ],
     onStart() {
+
         // add command
         this.commands = [lock]
         // variables
-        let handleGuildFolderExpand = () => {}
+        let handleGuildFolderExpand
         // let previous_id = "0"
         let cachedSelectedGuild = "0"
         let n = this.name
@@ -82,10 +83,17 @@ const K2geLocker: Plugin = {
                     if (get(this.name, args[0].guild.id)) {
                         //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
                         args[0].onGuildSelected = (guildId) => {
-                            // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
-                            Navigation.push(
-                                UnlockModal, {guildId: guildId, fn: handleGuildFolderExpand}
-                            )
+                            if (handleGuildFolderExpand === undefined) {
+                                Toasts.open({
+                                    content: "You need to reload Discord first to properly initialize K2geLocker.",
+                                    source: FailIcon
+                                })
+                            } else {
+                                // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
+                                Navigation.push(
+                                    UnlockModal, {guildId: guildId, fn: handleGuildFolderExpand}
+                                )
+                            }
                         }
                     } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
                         args[0].onGuildSelected = undefined
@@ -107,9 +115,17 @@ const K2geLocker: Plugin = {
                         "icon": KeyIcon2,
                         "text": "Unlock Server",
                         "onClick": () => {
-                            Navigation.push(
-                                UnlockModal, {guildId: args[0].guildId, fn: handleGuildFolderExpand}
-                            )
+                            if (handleGuildFolderExpand === undefined) {
+                                Toasts.open({
+                                    content: "You need to reload Discord first to properly initialize K2geLocker.",
+                                    source: FailIcon
+                                })
+                            } else {
+                                // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
+                                Navigation.push(
+                                    UnlockModal, {guildId: args[0].guildId, fn: handleGuildFolderExpand}
+                                )
+                            }
                         }
                     }]
                 } else {
@@ -121,6 +137,11 @@ const K2geLocker: Plugin = {
                             if (get(this.name, "passcode") === undefined) {
                                 Toasts.open({
                                     content: "Please set passcode in plugin setting before you lock the server!",
+                                    source: FailIcon
+                                })
+                            } else if (handleGuildFolderExpand === undefined) {
+                                Toasts.open({
+                                    content: "You need to reload Discord first to properly initialize K2geLocker.",
                                     source: FailIcon
                                 })
                             } else if (get(this.name, args[0].guildId)) {
