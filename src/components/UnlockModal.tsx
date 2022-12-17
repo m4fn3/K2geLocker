@@ -14,7 +14,7 @@ const FailIcon = getIDByName('Small')
 
 
 // モーダル本体
-export default ({guildId, args, fn}) => {
+export default ({guildId, fn}) => {
     // 内部のページ(変数引き継ぎのため内包)
     function page() {
         const styles = StyleSheet.createThemedStyleSheet({
@@ -71,15 +71,12 @@ export default ({guildId, args, fn}) => {
                             // password certification
                             if (event.nativeEvent.text == e(get("K2geLocker", "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
                                 set("K2geLocker", guildId, false)
-                                fn(... args)  // LongPressを無理やり実行して更新することでonGuildSelectedの中身を更新
+                                fn()  // onGuildSelectedの中身を更新
                                 Toasts.open({
                                     content: "Successfully unlocked!",
                                     source: StarIcon
                                 })
                                 Navigation.pop() // モーダルを閉じる
-                                /** TODO: 解除後解除したサーバーのアイコンを押さないとスライドが正常に動作しなくなるため他の更新方法があればそちらの方がよい
-                                   既知のトリガーされるタイミング: 全体の読み込み/サーバーアイコンを押したとき/lock中は長押し
-                                   解決策? : 押しを偽造 : 成功するが不具合有 / 偽の更新を呼び出し(TROLL) : 成功未 / 全体読み込みして回避(?)またはそれ同等のことを行う **/
                             } else {
                                 Toasts.open({
                                     content: "Incorrect password. Try again.",
