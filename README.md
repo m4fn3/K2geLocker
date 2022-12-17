@@ -7,13 +7,18 @@ https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 
 ## Usage
 - Set your passcode in plugin setting.
-- Tap "Invite" button and select "Lock the Server" to lock the server.<br>Also you can use /lock command to lock the server.
-- Select any channel in that server and enter passcode to unlock the server.
+- **Reload Discord after enabling plugin from setting to properly initialize K2gelocker, or you will face problems.**
+- Long press server icon and select "Lock Server" to lock the server.<br>
+  Also you can tap "Invite" button and select "Lock the Server" or use /lock command to lock the server.
+- Select server icon and modal to unlock server will show up.
 
 ## ScreenShot
-![IMG_4495](https://user-images.githubusercontent.com/43488869/207774985-ed7e659b-d307-4d97-9c7a-caa9fb395b32.png)
-![IMG_4494](https://user-images.githubusercontent.com/43488869/207774798-4195f4f1-6fec-453a-a44e-7e9c8ad108b1.png)
-![IMG_4489](https://user-images.githubusercontent.com/43488869/207371037-464767ae-e321-4456-9b51-7ba213547002.png)
+![IMG_4512](https://user-images.githubusercontent.com/43488869/208257019-f7fb370c-aed7-4beb-9ea2-e0db63e7fca3.png)
+![IMG_4511](https://user-images.githubusercontent.com/43488869/208257021-4e90075f-3fff-4b4d-acde-ee6e5b62c8ea.png)
+![IMG_4513](https://user-images.githubusercontent.com/43488869/208257024-aec595a3-305a-42c4-be83-9e4c151fffd4.png)
+![IMG_4514](https://user-images.githubusercontent.com/43488869/208257023-fe391849-60f7-41d7-956c-8c8550e8c087.png)
+
+
 
 ## Dev
 ### build
