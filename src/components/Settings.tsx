@@ -38,7 +38,7 @@ export default ({settings}: SettingsProps) => {
             color: Constants.ThemeColorMap.HEADER_PRIMARY
         },
         info: {
-            height: 35,
+            height: 40,
             paddingTop: 3,
             paddingBottom: 3,
             justifyContent: "center",

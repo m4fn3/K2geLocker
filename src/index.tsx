@@ -61,6 +61,7 @@ const K2geLocker: Plugin = {
 
         // Guild更新に使える関数を取得
         // GuildsConnected // 起動時に呼び出し
+        // (フォルダー開閉バグはこの関数をフックしていることによるが、フックを外すとGuild更新が行われなくなってしまうため外せない)
         Patcher.after(GuildsConnected, "default", (self, args, org) => {
             // Guilds
             Patcher.after(org, "type", (self, args, org) => {
@@ -163,7 +164,12 @@ const K2geLocker: Plugin = {
                 }
                 return res
             })
+
+            // MEMO
             // const test = findInReactTree(res, r => r.props?.onSelect) // Patcher.after(test.type, 'type', (_, args, res) =>()) // 下のバー
+            // const test = findInReactTree(res, r => r.props?.accessibilityLabel === "ダイレクトメッセージ" && r.props?.onPress) // 色々なボタンの押下をフックできる
+            // const test = findInReactTree(res, r => r.props?.onPress // これも様々なボタン
+            // ConnectedDCDChat : on Event × たくさん
 
             // 通常Guildが起動時に呼ばれる=先に呼ばれるためこの順序でここまでたどり着いた場合にunpatchする
             unpatch() // 目的のオブジェクトを見つけてフック出来た後は不要なので
