@@ -1,11 +1,12 @@
-import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch, Image, Text} from "enmity/components"
+import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch, Image, Text, ScrollView} from "enmity/components"
 import {SettingsStore} from "enmity/api/settings"
-import {Constants, React, StyleSheet, Toasts} from "enmity/metro/common"
+import {Constants, Dialog, React, StyleSheet, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
-import {Linking} from "enmity/metro/common";
+import {Linking} from "enmity/metro/common"
 import {reload} from "enmity/api/native"
 
 import {e} from "../utils/encryption"
+import {checkUpdate} from "../utils/update"
 
 interface SettingsProps {
     settings: SettingsStore
@@ -15,6 +16,12 @@ interface SettingsProps {
 const n = "Love K2ge3 lol"
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
+const GitHubIcon = getIDByName('img_account_sync_github_white')
+const TwitterIcon = getIDByName('img_account_sync_twitter_white')
+const ReloadIcon = getIDByName('ic_message_retry') // ic_sync_24px
+const InviteIcon = getIDByName('hub-invite')
+const DevIcon = getIDByName('debug') // ic_hammer_and_chisel_24px / ic_home_remove / ic_progress_wrench_24px
+const UpdateIcon = getIDByName('toast_image_saved')
 
 // setting menu
 export default ({settings}: SettingsProps) => {
@@ -25,20 +32,29 @@ export default ({settings}: SettingsProps) => {
             alignItems: "center"
         },
         image: {
-            width: 50,
-            height: 50,
+            width: 70,
+            height: 70,
             marginTop: 20,
             marginLeft: 20
         },
-        description: {
-            flex: 1,
+        title: {
+            flexDirection: "column",
+
+        },
+        name: {
             fontSize: 30,
             paddingTop: 20,
-            paddingLeft: 30,
-            color: Constants.ThemeColorMap.HEADER_PRIMARY
+            paddingLeft: 20,
+            paddingRight: 30,
+            color: Constants.ThemeColorMap.HEADER_PRIMARY,
+        },
+        author: {
+            fontSize: 15,
+            paddingLeft: 50,
+            color: Constants.ThemeColorMap.HEADER_SECONDARY,
         },
         info: {
-            height: 40,
+            height: 45,
             paddingTop: 3,
             paddingBottom: 3,
             justifyContent: "center",
@@ -46,13 +62,16 @@ export default ({settings}: SettingsProps) => {
         }
     })
     return (
-        <View>
+        <ScrollView>
             <View style={styles.container}>
                 <Image
                     source={{uri: 'https://avatars.githubusercontent.com/u/43488869'}}
                     style={styles.image}
                 />
-                <Text style={styles.description}>K2geLocker</Text>
+                <View style={styles.title}>
+                    <Text style={styles.name}>K2geLocker</Text>
+                    <Text style={styles.author}>by mafu</Text>
+                </View>
             </View>
             <FormSection title="SETTINGS">
                 <FormInput
@@ -79,7 +98,18 @@ export default ({settings}: SettingsProps) => {
                     secureTextEntry={true}
                 />
                 <FormRow
+                    label="Reload Discord"
+                    trailing={FormRow.Arrow}
+                    leading={<FormRow.Icon source={ReloadIcon}/>}
+                    subLabel={`Reloading is required in order to properly initialize K2geLocker after enabling plugin`}
+                    onPress={() => {
+                        reload()
+                    }}
+                />
+                <FormRow
                     label="Enable invitation menu hijacking"
+                    subLabel={`Useful for iPad on which can't long press icon. For servers with inv disabled, use /lock command.`}
+                    leading={<FormRow.Icon source={InviteIcon}/>}
                     trailing={
                         <FormSwitch
                             value={settings.getBoolean("inv_hijack", true)}
@@ -90,33 +120,64 @@ export default ({settings}: SettingsProps) => {
                     }
                 />
                 <FormRow
-                    label="Reload Discord"
-                    style={styles.info}
-                    trailing={FormRow.Arrow}
+                    label="Check for updates"
+                    subLabel={`Whether automatically check or not. You can tap here to check manually too.`}
+                    leading={<FormRow.Icon source={UpdateIcon}/>}
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("check_updates", true)}
+                            onValueChange={(value) => {
+                                settings.set("check_updates", value)
+                            }}
+                        />
+                    }
                     onPress={() => {
-                        reload()
+                        checkUpdate(true)
                     }}
                 />
-                <FormRow label="You need to reload Discord after enabling plugin from setting to properly initialize K2geLocker, or you will face problems." />
+                <FormRow
+                    label="Disable auto refreshing"
+                    subLabel={`Fix bugs on left bar, but an additional action is needed after unlocking.`}
+                    leading={<FormRow.Icon source={DevIcon}/>}
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("no_auto_refresh", false)}
+                            onValueChange={(value) => {
+                                settings.set("no_auto_refresh", value)
+                                Dialog.show({
+                                    title: "Reload",
+                                    body: "Reloading is required to apply changes.\nDo you want to reload Discord now?",
+                                    confirmText: "Yes",
+                                    cancelText: "Later",
+                                    onConfirm: () => {
+                                        reload()
+                                    }
+                                })
+                            }}
+                        />
+                    }
+                />
             </FormSection>
             <FormSection title="INFORMATION">
                 <FormRow
-                    label="GitHub"
+                    label="GitHub (m4fn3)"
                     style={styles.info}
                     trailing={FormRow.Arrow}
+                    leading={<FormRow.Icon source={GitHubIcon}/>}
                     onPress={() => {
                         Linking.openURL("https://github.com/m4fn3/K2geLocker")
                     }}
                 />
                 <FormRow
-                    label="Twitter"
+                    label="Twitter @m4fn3"
                     style={styles.info}
                     trailing={FormRow.Arrow}
+                    leading={<FormRow.Icon source={TwitterIcon}/>}
                     onPress={() => {
                         Linking.openURL("https://twitter.com/m4fn3")
                     }}
                 />
             </FormSection>
-        </View>
+        </ScrollView>
     )
 }

@@ -6,8 +6,10 @@ import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
 
-
+// @ts-ignore
+import manifest, {name} from '../manifest.json'
 import {e} from "./utils/encryption"
+import {checkUpdate} from "./utils/update"
 import Settings from "./components/Settings"
 import lock from "./components/Commands"
 import UnlockModal from "./components/UnlockModal"
@@ -34,22 +36,21 @@ const FailIcon = getIDByName('Small')
 const KeyIcon = getIDByName('ic_locked_24px')
 const KeyIcon2 = getIDByName('ic_full_server_gating_24px')
 
-import {findInReactTree, wrapInHooks} from 'enmity/utilities'
+import {findInReactTree} from 'enmity/utilities'
+// findInReactTree : オブジェクトから指定した要素を持つオブジェクトを探す
+// wrapInHooks : 関数を引数付きで呼ぶ(強制的にオブジェクトをrenderする関数?らしい) // 普通に呼ぶのとの違いは不明 -> ref:
+//                  https://github.com/Crooswijk/secret/blob/c2109a2d8a0ebd69939719871efa3bd1c4f84f3b/Plugins/ShowHiddenChannels/src/index.tsx
+// FluxDispatcher : 詳細不明 -> ref:
+//                  https://github.com/spinfal/enmity-plugins/blob/master/AmongUs/src/index.tsx
+//                  https://github.com/acquitelol/dislate/blob/main/src/index.tsx
+
 
 const K2geLocker: Plugin = {
-    name: 'K2geLocker',
-    version: '1.1.0',
-    description: 'Lock the specific server with passcode.',
-    authors: [
-        {
-            name: 'mafu',
-            id: '519760564755365888'
-        }
-    ],
+    ...manifest,
     onStart() {
-
         // add command
         this.commands = [lock]
+
         // variables
         let handleGuildFolderExpand
         // let previous_id = "0"
@@ -58,16 +59,51 @@ const K2geLocker: Plugin = {
         if (get(this.name, "inv_hijack") === undefined) {
             set(this.name, "inv_hijack", true)
         }
+        if (get(this.name, "no_auto_refresh") === undefined) {
+            set(this.name, "no_auto_refresh", false)
+        }
+        if (get(this.name, "check_updates") === undefined) {
+            set(this.name, "check_updates", true)
+        }
+        // 前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
 
-        // Guild更新に使える関数を取得
-        // GuildsConnected // 起動時に呼び出し
-        // (フォルダー開閉バグはこの関数をフックしていることによるが、フックを外すとGuild更新が行われなくなってしまうため外せない)
-        Patcher.after(GuildsConnected, "default", (self, args, org) => {
-            // Guilds
-            Patcher.after(org, "type", (self, args, org) => {
-                handleGuildFolderExpand = org.handleGuildFolderExpand
+        if (!get(this.name, "no_auto_refresh")) {
+            // Guild更新に使える関数を取得
+            // GuildsConnected // 起動時に呼び出し
+            // (フォルダー開閉バグはこの関数をフックしていることによるが、フックを外すとGuild更新が行われなくなってしまうため外せない)
+            Patcher.after(GuildsConnected, "default", (self, args, org) => {
+                // Guilds
+                Patcher.after(org, "type", (self, args, org) => {
+                    handleGuildFolderExpand = org.handleGuildFolderExpand
+                })
             })
-        })
+        } else {
+            handleGuildFolderExpand = () => {
+            }
+        }
+
+        // define handler
+        function onGuildSelected(guildId) {
+            if (handleGuildFolderExpand === undefined) {
+                Toasts.open({
+                    content: "You need to reload Discord first to properly initialize K2geLocker.",
+                    source: FailIcon
+                })
+            } else {
+                if (get("K2geLocker", guildId)) {
+                    // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
+                    Navigation.push(
+                        UnlockModal, {guildId: guildId, fn: handleGuildFolderExpand}
+                    )
+                } else {
+                    Dialog.show({
+                        title: "Refreshing server is needed!",
+                        body: "Long press on the icon of server you unlocked to refresh and apply unlocking!\nIf you don't want this behavior, change option in plugin settings.",
+                        confirmText: "OK"
+                    })
+                }
+            }
+        }
 
         // on render
         // Viewのrender関数をフックしてひたすら追跡
@@ -83,19 +119,7 @@ const K2geLocker: Plugin = {
                     // 先にロックされているかに合わせてonGuildSelectedを編集してから元の関数へ(Patcher.before)
                     if (get(this.name, args[0].guild.id)) {
                         //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
-                        args[0].onGuildSelected = (guildId) => {
-                            if (handleGuildFolderExpand === undefined) {
-                                Toasts.open({
-                                    content: "You need to reload Discord first to properly initialize K2geLocker.",
-                                    source: FailIcon
-                                })
-                            } else {
-                                // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
-                                Navigation.push(
-                                    UnlockModal, {guildId: guildId, fn: handleGuildFolderExpand}
-                                )
-                            }
-                        }
+                        args[0].onGuildSelected = onGuildSelected
                     } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
                         args[0].onGuildSelected = undefined
                     }
@@ -116,17 +140,7 @@ const K2geLocker: Plugin = {
                         "icon": KeyIcon2,
                         "text": "Unlock Server",
                         "onClick": () => {
-                            if (handleGuildFolderExpand === undefined) {
-                                Toasts.open({
-                                    content: "You need to reload Discord first to properly initialize K2geLocker.",
-                                    source: FailIcon
-                                })
-                            } else {
-                                // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
-                                Navigation.push(
-                                    UnlockModal, {guildId: args[0].guildId, fn: handleGuildFolderExpand}
-                                )
-                            }
+                            onGuildSelected(args[0].guildId)
                         }
                     }]
                 } else {
@@ -222,7 +236,6 @@ const K2geLocker: Plugin = {
                         marginBottom: 70
                     }
                 })
-
                 return <View style={styles.container}>
                     <Image style={styles.image} source={LockIcon}/>
                     <Text style={styles.header}>
@@ -299,6 +312,15 @@ const K2geLocker: Plugin = {
                 org.apply(self, args)
             }
         })
+
+        // check for updates    // 時間は対してかからないがパッチは速さ重視なので最後に
+        if (get(this.name, "check_updates")) {
+            if (get(this.name, "updating")) { // アップデート中はチェックを飛ばす
+                set(name, "updating", false) // Updateを押した後にCancelした場合はinstallPluginのCallbackが呼ばれないためここでオフにする
+            } else {
+                checkUpdate()
+            }
+        }
     },
     onStop() {
         this.commands = []

@@ -1,8 +1,11 @@
 import {React, Navigation, NavigationNative, NavigationStack, StyleSheet, Constants, Toasts} from 'enmity/metro/common'
 import {Button, View, Image, Text, TextInput} from 'enmity/components'
-import {getIDByName} from "enmity/api/assets";
-import {e} from "../utils/encryption";
-import {get, set} from "enmity/api/settings";
+import {getIDByName} from "enmity/api/assets"
+import {e} from "../utils/encryption"
+import {get, set} from "enmity/api/settings"
+
+// @ts-ignore
+import { name } from '../../manifest.json'
 
 export const Settings = NavigationStack.createStackNavigator()
 
@@ -11,7 +14,6 @@ const n = "Love K2ge3 lol"
 const LockIcon = getIDByName('nsfw_gate_lock')
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
-
 
 // モーダル本体
 export default ({guildId, fn}) => {
@@ -55,7 +57,6 @@ export default ({guildId, fn}) => {
                 marginBottom: 70
             }
         })
-
         return (
             <View style={styles.container}>
                 <Image style={styles.image} source={LockIcon}/>
@@ -70,11 +71,15 @@ export default ({guildId, fn}) => {
                     onSubmitEditing={
                         (event) => {
                             // password certification
-                            if (event.nativeEvent.text == e(get("K2geLocker", "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
-                                set("K2geLocker", guildId, false)
+                            if (event.nativeEvent.text == e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
+                                set(name, guildId, false)
                                 fn()  // onGuildSelectedの中身を更新
+                                let toast_text = "Successfully unlocked!"
+                                if (get(name, "no_auto_refresh")){
+                                    toast_text = "Now, long press on server icon to apply unlocking!"
+                                }
                                 Toasts.open({
-                                    content: "Successfully unlocked!",
+                                    content: toast_text,
                                     source: StarIcon
                                 })
                                 Navigation.pop() // モーダルを閉じる
