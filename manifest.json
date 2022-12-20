@@ -1,0 +1,11 @@
+{
+  "name": "K2geLocker",
+  "version": "1.1.0",
+  "description": "Lock the specific server with passcode.",
+  "authors": [
+    {
+      "name": "mafu",
+      "id": "519760564755365888"
+    }
+  ]
+}
