@@ -28,7 +28,6 @@ function checkUpdate(forceUpdate = false) {
     REST.get(manifest_url).then(manifestRaw => {
         const manifest = JSON.parse(manifestRaw.text)
         const plugin = getPlugin(manifest.name)
-        console.log((manifest.version.localeCompare(plugin.version, undefined, {numeric: true})))
         if (manifest.version.localeCompare(plugin.version, undefined, {numeric: true}) === 1) {
             if (forceUpdate || (!forceUpdate && get(name, "ignored") != manifest.version)) {
                 Dialog.show({
