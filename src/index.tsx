@@ -20,13 +20,13 @@ const Patcher = create('K2geLocker')
 const [
     Messages,
     LazyActionSheet,
-    GuildTooltipActionSheets,
-    GuildsConnected
+    GuildsConnected,
+    SelectedGuildStore
 ] = bulk(
     filters.byName('MessagesConnected', false),
     filters.byProps("openLazy", "hideActionSheet"),
-    filters.byName('GuildTooltipActionSheets', false),
-    filters.byName("GuildsConnected", false)
+    filters.byName("GuildsConnected", false),
+    filters.byProps("getLastSelectedGuildId")
 )
 
 // asset resources
@@ -54,7 +54,6 @@ const K2geLocker: Plugin = {
         // variables
         let handleGuildFolderExpand
         // let previous_id = "0"
-        let cachedSelectedGuild = "0"
         let n = this.name
         if (get(this.name, "inv_hijack") === undefined) {
             set(this.name, "inv_hijack", true)
@@ -188,11 +187,6 @@ const K2geLocker: Plugin = {
             // 通常Guildが起動時に呼ばれる=先に呼ばれるためこの順序でここまでたどり着いた場合にunpatchする
             unpatch() // 目的のオブジェクトを見つけてフック出来た後は不要なので
         })
-        // on select server
-        Patcher.instead(GuildTooltipActionSheets, "default", (self, args, org) => {
-            cachedSelectedGuild = args[0]["guildId"] // cache selected server id
-            return org.apply(self, args) // 別のものを返しても全く影響なし
-        })
         // on load channel
         Patcher.instead(Messages, 'default', (self, args, org) => {
             let res = org.apply(self, args)
@@ -277,7 +271,8 @@ const K2geLocker: Plugin = {
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
             let sheet = args[1]
             if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(this.name, "inv_hijack")) {
-                if (get(this.name, cachedSelectedGuild)) {
+                let selectedGuildId = SelectedGuildStore.getLastSelectedGuildId()
+                if (get(this.name, selectedGuildId)) {
                     Dialog.show({
                         title: "K2geLocker",
                         body: "This server is locked",
@@ -296,7 +291,7 @@ const K2geLocker: Plugin = {
                                     source: FailIcon
                                 })
                             } else {
-                                set(this.name, cachedSelectedGuild, true)
+                                set(this.name, selectedGuildId, true)
                                 Toasts.open({
                                     content: "Successfully locked!",
                                     source: StarIcon

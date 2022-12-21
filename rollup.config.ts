@@ -2,7 +2,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import esbuild from 'rollup-plugin-esbuild';
 import json from '@rollup/plugin-json';
-;
+
 import { defineConfig } from 'rollup';
 
 export default defineConfig({
