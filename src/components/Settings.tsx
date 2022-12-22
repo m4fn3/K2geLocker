@@ -135,28 +135,6 @@ export default ({settings}: SettingsProps) => {
                         checkUpdate(true)
                     }}
                 />
-                <FormRow
-                    label="Disable auto refreshing"
-                    subLabel={`Fix bugs on left bar, but an additional action is needed after unlocking.`}
-                    leading={<FormRow.Icon source={DevIcon}/>}
-                    trailing={
-                        <FormSwitch
-                            value={settings.getBoolean("no_auto_refresh", false)}
-                            onValueChange={(value) => {
-                                settings.set("no_auto_refresh", value)
-                                Dialog.show({
-                                    title: "Reload",
-                                    body: "Reloading is required to apply changes.\nDo you want to reload Discord now?",
-                                    confirmText: "Yes",
-                                    cancelText: "Later",
-                                    onConfirm: () => {
-                                        reload()
-                                    }
-                                })
-                            }}
-                        />
-                    }
-                />
             </FormSection>
             <FormSection title="INFORMATION">
                 <FormRow

@@ -73,7 +73,7 @@ export default ({guildId, fn}) => {
                             // password certification
                             if (event.nativeEvent.text == e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
                                 set(name, guildId, false)
-                                fn()  // onGuildSelectedの中身を更新
+                                fn(guildId)  // onGuildSelectedの中身を更新
                                 let toast_text = "Successfully unlocked!"
                                 if (get(name, "no_auto_refresh")){
                                     toast_text = "Now, long press on server icon to apply unlocking!"

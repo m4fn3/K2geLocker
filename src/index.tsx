@@ -20,13 +20,15 @@ const Patcher = create('K2geLocker')
 const [
     Messages,
     LazyActionSheet,
-    GuildsConnected,
-    SelectedGuildStore
+    SelectedGuildStore,
+    SelectedChannelStore,
+    FluxDispatcher
 ] = bulk(
     filters.byName('MessagesConnected', false),
     filters.byProps("openLazy", "hideActionSheet"),
-    filters.byName("GuildsConnected", false),
-    filters.byProps("getLastSelectedGuildId")
+    filters.byProps("getLastSelectedGuildId"),
+    filters.byProps("getMostRecentSelectedTextChannelId"),
+    filters.byProps("_currentDispatchActionType", "_subscriptions", "_waitQueue")
 )
 
 // asset resources
@@ -52,56 +54,37 @@ const K2geLocker: Plugin = {
         this.commands = [lock]
 
         // variables
-        let handleGuildFolderExpand
         // let previous_id = "0"
         let n = this.name
         if (get(this.name, "inv_hijack") === undefined) {
             set(this.name, "inv_hijack", true)
         }
-        if (get(this.name, "no_auto_refresh") === undefined) {
-            set(this.name, "no_auto_refresh", false)
-        }
         if (get(this.name, "check_updates") === undefined) {
             set(this.name, "check_updates", true)
         }
+
         // 前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
 
-        if (!get(this.name, "no_auto_refresh")) {
-            // Guild更新に使える関数を取得
-            // GuildsConnected // 起動時に呼び出し
-            // (フォルダー開閉バグはこの関数をフックしていることによるが、フックを外すとGuild更新が行われなくなってしまうため外せない)
-            Patcher.after(GuildsConnected, "default", (self, args, org) => {
-                // Guilds
-                Patcher.after(org, "type", (self, args, org) => {
-                    handleGuildFolderExpand = org.handleGuildFolderExpand
-                })
+        // move to unlocked guild
+        function moveToUnlockedGuild(guildId) {
+            let channelId = SelectedChannelStore.getMostRecentSelectedTextChannelId(guildId)
+            FluxDispatcher.dispatch({
+                type: 'CHANNEL_SELECT',
+                guildId: guildId,
+                channelId: channelId,
+                messageId: undefined,
+                jumpType: 'ANIMATED',
+                preserveDrawerState: false,
+                source: undefined
             })
-        } else {
-            handleGuildFolderExpand = () => {
-            }
         }
 
         // define handler
         function onGuildSelected(guildId) {
-            if (handleGuildFolderExpand === undefined) {
-                Toasts.open({
-                    content: "You need to reload Discord first to properly initialize K2geLocker.",
-                    source: FailIcon
-                })
-            } else {
-                if (get("K2geLocker", guildId)) {
-                    // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
-                    Navigation.push(
-                        UnlockModal, {guildId: guildId, fn: handleGuildFolderExpand}
-                    )
-                } else {
-                    Dialog.show({
-                        title: "Refreshing server is needed!",
-                        body: "Long press on the icon of server you unlocked to refresh and apply unlocking!\nIf you don't want this behavior, change option in plugin settings.",
-                        confirmText: "OK"
-                    })
-                }
-            }
+            // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
+            Navigation.push(
+                UnlockModal, {guildId: guildId, fn: moveToUnlockedGuild}
+            )
         }
 
         // on render
@@ -153,11 +136,6 @@ const K2geLocker: Plugin = {
                                     content: "Please set passcode in plugin setting before you lock the server!",
                                     source: FailIcon
                                 })
-                            } else if (handleGuildFolderExpand === undefined) {
-                                Toasts.open({
-                                    content: "You need to reload Discord first to properly initialize K2geLocker.",
-                                    source: FailIcon
-                                })
                             } else if (get(this.name, args[0].guildId)) {
                                 Toasts.open({
                                     content: "This server is already locked!",
@@ -165,8 +143,8 @@ const K2geLocker: Plugin = {
                                 })
                             } else {
                                 set(this.name, args[0].guildId, true)
-                                // onGuildSelectedの中身を更新
-                                handleGuildFolderExpand()
+                                // onGuildSelectedの中身を更新 : Lockの後は妥協
+                                // moveToUnlockedGuild(args[0].guildId)
                                 Toasts.open({
                                     content: "Successfully locked!",
                                     source: StarIcon
