@@ -75,9 +75,6 @@ export default ({guildId, fn}) => {
                                 set(name, guildId, false)
                                 fn(guildId)  // onGuildSelectedの中身を更新
                                 let toast_text = "Successfully unlocked!"
-                                if (get(name, "no_auto_refresh")){
-                                    toast_text = "Now, long press on server icon to apply unlocking!"
-                                }
                                 Toasts.open({
                                     content: toast_text,
                                     source: StarIcon
