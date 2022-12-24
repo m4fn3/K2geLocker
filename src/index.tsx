@@ -1,18 +1,20 @@
 import {StyleSheet, Constants, Dialog, React, Toasts, Navigation} from 'enmity/metro/common'
 import {Plugin, registerPlugin} from 'enmity/managers/plugins'
-import {bulk, filters} from 'enmity/metro'
+import {bulk, filters, getModule} from 'enmity/metro'
 import {Image, Text, View, TextInput} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
+import {findInReactTree} from 'enmity/utilities'
 
 // @ts-ignore
 import manifest, {name} from '../manifest.json'
 import {e} from "./utils/encryption"
+import {getStoreHandlers} from "./utils/store"
 import {checkUpdate} from "./utils/update"
 import Settings from "./components/Settings"
 import lock from "./components/Commands"
-import UnlockModal from "./components/UnlockModal"
+import {GuildUnlock, AppUnlock} from "./components/UnlockModal"
 
 const Patcher = create('K2geLocker')
 
@@ -38,14 +40,11 @@ const FailIcon = getIDByName('Small')
 const KeyIcon = getIDByName('ic_locked_24px')
 const KeyIcon2 = getIDByName('ic_full_server_gating_24px')
 
-import {findInReactTree} from 'enmity/utilities'
-// findInReactTree : オブジェクトから指定した要素を持つオブジェクトを探す
-// wrapInHooks : 関数を引数付きで呼ぶ(強制的にオブジェクトをrenderする関数?らしい) // 普通に呼ぶのとの違いは不明 -> ref:
-//                  https://github.com/Crooswijk/secret/blob/c2109a2d8a0ebd69939719871efa3bd1c4f84f3b/Plugins/ShowHiddenChannels/src/index.tsx
-// FluxDispatcher : 詳細不明 -> ref:
-//                  https://github.com/spinfal/enmity-plugins/blob/master/AmongUs/src/index.tsx
-//                  https://github.com/acquitelol/dislate/blob/main/src/index.tsx
-
+function initVariable(name, defVal) {
+    if (get("K2geLocker", name) === undefined) {
+        set("K2geLocker", name, defVal)
+    }
+}
 
 const K2geLocker: Plugin = {
     ...manifest,
@@ -56,12 +55,15 @@ const K2geLocker: Plugin = {
         // variables
         // let previous_id = "0"
         let n = this.name
-        if (get(this.name, "inv_hijack") === undefined) {
-            set(this.name, "inv_hijack", true)
+        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false]]
+        metas.forEach((meta)=>{
+            initVariable(meta[0], meta[1])
+        })
+        // @ts-ignore // passcodeが数字でない場合リセットする
+        if (isNaN(e(get(this.name, "passcode"), `${n[0]}${n[1]}${n[4]}`))) {
+            set(this.name, "passcode", undefined)
         }
-        if (get(this.name, "check_updates") === undefined) {
-            set(this.name, "check_updates", true)
-        }
+
 
         // 前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
 
@@ -83,9 +85,24 @@ const K2geLocker: Plugin = {
         function onGuildSelected(guildId) {
             // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
             Navigation.push(
-                UnlockModal, {guildId: guildId, fn: moveToUnlockedGuild}
+                GuildUnlock, {guildId: guildId, fn: moveToUnlockedGuild}
             )
         }
+
+        // on app state changed
+        let opened = false
+        Patcher.before(getStoreHandlers("AppStateStore"), "APP_STATE_UPDATE", (self, args, res) => {
+            if (get(this.name, "lock_app") && !opened) { // 既に開いているのにもう一度開くのを防ぐ
+                Navigation.push(
+                    AppUnlock, {
+                        setOpened: (b) => {
+                            opened = b // 変数を共有するのがめんどくさいので無名関数で代用
+                        }
+                    }
+                )
+                opened = true
+            }
+        })
 
         // on render
         // Viewのrender関数をフックしてひたすら追跡

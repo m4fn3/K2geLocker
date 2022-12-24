@@ -20,7 +20,8 @@ const GitHubIcon = getIDByName('img_account_sync_github_white')
 const TwitterIcon = getIDByName('img_account_sync_twitter_white')
 const ReloadIcon = getIDByName('ic_message_retry') // ic_sync_24px
 const InviteIcon = getIDByName('hub-invite')
-const DevIcon = getIDByName('debug') // ic_hammer_and_chisel_24px / ic_home_remove / ic_progress_wrench_24px
+// const DevIcon = getIDByName('debug') // ic_hammer_and_chisel_24px / ic_home_remove / ic_progress_wrench_24px
+const LockIcon = getIDByName('ic_lock') // ic_locked_24px
 const UpdateIcon = getIDByName('toast_image_saved')
 
 // setting menu
@@ -96,6 +97,7 @@ export default ({settings}: SettingsProps) => {
                         }
                     }
                     secureTextEntry={true}
+                    keyboardType={'number-pad'}
                 />
                 <FormRow
                     label="Reload Discord"
@@ -115,6 +117,19 @@ export default ({settings}: SettingsProps) => {
                             value={settings.getBoolean("inv_hijack", true)}
                             onValueChange={(value) => {
                                 settings.set("inv_hijack", value)
+                            }}
+                        />
+                    }
+                />
+                <FormRow
+                    label="Enable app-wide locking"
+                    subLabel={`You can lock entire app with passcode!`}
+                    leading={<FormRow.Icon source={LockIcon}/>}
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("lock_app", false)}
+                            onValueChange={(value) => {
+                                settings.set("lock_app", value)
                             }}
                         />
                     }
