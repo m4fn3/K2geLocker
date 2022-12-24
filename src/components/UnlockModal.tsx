@@ -104,11 +104,12 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
         const [passcode, setPasscode] = React.useState("")
         const defaultCircleStyles = [styles.gray_circle, styles.gray_circle, styles.gray_circle, styles.gray_circle]
         const [circleStyles, setCircleStyles] = React.useState(defaultCircleStyles)
+        let titleText = isSetup ? "Enter new passcode" : "Enter passcode "
 
         return (
             <View style={styles.container}>
                 <View style={styles.title}>
-                    <Text style={styles.titleText}>Enter passcode</Text>
+                    <Text style={styles.titleText}>{titleText}</Text>
                 </View>
                 <View style={styles.circleBox}>
                     <View style={circleStyles[0]}/>
@@ -244,125 +245,6 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
     )
 }
 
-// モーダル本体
-function GuildUnlock({guildId, fn}) {
-    // 内部のページ(変数引き継ぎのため内包)
-    function page() {
-        const styles = StyleSheet.createThemedStyleSheet({
-            container: {
-                fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: Constants.ThemeColorMap.BACKGROUND_PRIMARY
-            },
-            image: {
-                width: 120,
-                height: 120,
-                padding: 5,
-                marginBottom: 30
-            },
-            header: {
-                color: Constants.ThemeColorMap.HEADER_PRIMARY,
-                fontWeight: 'bold',
-                fontSize: 25
-            },
-            text: {
-                color: Constants.ThemeColorMap.HEADER_SECONDARY,
-                fontSize: 16
-            },
-            passcode: {
-                width: 100,
-                height: 20,
-                marginTop: 30,
-                borderWidth: 1,
-                borderColor: Constants.ThemeColorMap.HEADER_SECONDARY,
-                backgroundColor: Constants.ThemeColorMap.HEADER_SECONDARY
-            },
-            footer: {
-                color: Constants.ThemeColorMap.HEADER_SECONDARY,
-                fontSize: 16,
-                marginTop: 100,
-                marginBottom: 70
-            }
-        })
-        return (
-            <View style={styles.container}>
-                <Image style={styles.image} source={LockIcon}/>
-                <Text style={styles.header}>
-                    This server is locked!
-                </Text>
-                <Text style={styles.text}>
-                    enter passcode to unlock
-                </Text>
-                <TextInput
-                    style={styles.passcode}
-                    onSubmitEditing={
-                        (event) => {
-                            // password certification
-                            if (event.nativeEvent.text == e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
-                                set(name, guildId, false)
-                                fn(guildId)  // onGuildSelectedの中身を更新
-                                Toasts.open({
-                                    content: "Successfully unlocked!",
-                                    source: StarIcon
-                                })
-                                Navigation.pop() // モーダルを閉じる
-                            } else {
-                                Toasts.open({
-                                    content: "Incorrect password. Try again.",
-                                    source: FailIcon
-                                })
-                            }
-                        }
-                    }
-                    secureTextEntry={true}
-                />
-                <Text style={styles.footer}>
-                    K2geLocker
-                </Text>
-            </View>
-        )
-    }
 
 
-    return (
-        <NavigationNative.NavigationContainer>
-            <Settings.Navigator
-                initialRouteName="K2egeLocker"
-                style={header_styles.container}
-                screenOptions={{
-                    cardOverlayEnabled: !1,
-                    cardShadowEnabled: !1,
-                    cardStyle: header_styles.cardStyle,
-                    headerStyle: header_styles.header,
-                    headerTitleContainerStyle: header_styles.headerTitleContainer,
-                    headerTitleAlign: 'center',
-                    safeAreaInsets: {
-                        top: 0,
-                    },
-                }}
-            >
-                <Settings.Screen
-                    name="K2geLocker"
-                    component={page}
-                    options={{
-                        headerTitleStyle: {
-                            color: 'white',
-                        },
-                        headerLeft: () => (
-                            <Button
-                                color={header_styles.close.color}
-                                title='Close'
-                                onPress={() => Navigation.pop()}
-                            />
-                        ),
-                        ...NavigationStack.TransitionPresets.ModalSlideFromBottomIOS
-                    }}
-                />
-            </Settings.Navigator>
-        </NavigationNative.NavigationContainer>
-    )
-}
-
-export {GuildUnlock, AppUnlock}
+export {AppUnlock}

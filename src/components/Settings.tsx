@@ -111,20 +111,27 @@ export default ({settings}: SettingsProps) => {
                     }
                 />
 
-                <FormRow
-                    label="Erase Passcode [TEST]"
-                    trailing={FormRow.Arrow}
-                    onPress={() => {
-                        settings.set("passcode", undefined)
-                    }}
-                />
-                <FormRow
-                    label="Fuck Passcode [TEST]"
-                    trailing={FormRow.Arrow}
-                    onPress={() => {
-                        settings.set("passcode", "k1odd;")
-                    }}
-                />
+                {/*<FormRow*/}
+                {/*    label="Erase Passcode [TEST]"*/}
+                {/*    trailing={FormRow.Arrow}*/}
+                {/*    onPress={() => {*/}
+                {/*        settings.set("passcode", undefined)*/}
+                {/*    }}*/}
+                {/*/>*/}
+                {/*<FormRow*/}
+                {/*    label="Fuck Passcode [TEST]"*/}
+                {/*    trailing={FormRow.Arrow}*/}
+                {/*    onPress={() => {*/}
+                {/*        settings.set("passcode", "k1odd;")*/}
+                {/*    }}*/}
+                {/*/>*/}
+                {/*<FormRow*/}
+                {/*    label="FORCE LOCK [TEST]"*/}
+                {/*    trailing={FormRow.Arrow}*/}
+                {/*    onPress={() => {*/}
+                {/*        settings.set("lock_app", true)*/}
+                {/*    }}*/}
+                {/*/>*/}
 
                 <FormRow
                     label="Enable app-wide locking"
@@ -166,21 +173,21 @@ export default ({settings}: SettingsProps) => {
             </FormSection>
             <FormSection title="INFORMATION">
                 <FormRow
-                    label="GitHub (m4fn3)"
-                    style={styles.info}
-                    trailing={FormRow.Arrow}
-                    leading={<FormRow.Icon source={GitHubIcon}/>}
-                    onPress={() => {
-                        Linking.openURL("https://github.com/m4fn3/K2geLocker")
-                    }}
-                />
-                <FormRow
                     label="Twitter @m4fn3"
                     style={styles.info}
                     trailing={FormRow.Arrow}
                     leading={<FormRow.Icon source={TwitterIcon}/>}
                     onPress={() => {
                         Linking.openURL("https://twitter.com/m4fn3")
+                    }}
+                />
+                <FormRow
+                    label="GitHub (m4fn3)"
+                    style={styles.info}
+                    trailing={FormRow.Arrow}
+                    leading={<FormRow.Icon source={GitHubIcon}/>}
+                    onPress={() => {
+                        Linking.openURL("https://github.com/m4fn3/K2geLocker")
                     }}
                 />
             </FormSection>
