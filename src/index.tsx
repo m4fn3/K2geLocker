@@ -94,15 +94,19 @@ const K2geLocker: Plugin = {
         let opened = false
         Patcher.before(getStoreHandlers("AppStateStore"), "APP_STATE_UPDATE", (self, args, res) => {
             if (get(n, "lock_app") && !opened) { // 既に開いているのにもう一度開くのを防ぐ
-                Navigation.push(
-                    AppUnlock, {
-                        callback: () => {
-                            opened = false // 変数を共有するのがめんどくさいので無名関数で代用
-                        },
-                        showClose: false
-                    }
-                )
-                opened = true
+                if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
+                    set(n, "lock_app", false)
+                } else {
+                    Navigation.push(
+                        AppUnlock, {
+                            callback: () => {
+                                opened = false // 変数を共有するのがめんどくさいので無名関数で代用
+                            },
+                            showClose: false
+                        }
+                    )
+                    opened = true
+                }
             }
         })
 
