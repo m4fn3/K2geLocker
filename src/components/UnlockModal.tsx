@@ -17,6 +17,8 @@ const [ReactNative] = bulk(filters.byProps("AppState"))
 const n = "Love K2ge3 lol"
 const LockIcon = getIDByName('nsfw_gate_lock')
 const StarIcon = getIDByName('img_nitro_star')
+const CheckIcon = getIDByName('ic_following')
+const InfoIcon = getIDByName('ic_info_24px')
 const FailIcon = getIDByName('Small')
 const BackIcon = getIDByName("ic_arrow_back_24px")
 
@@ -42,7 +44,7 @@ const header_styles = StyleSheet.createThemedStyleSheet({
     }
 })
 
-function AppUnlock({setOpened}) {
+function AppUnlock({callback = null, isSetup = false, showClose = true}) {
     const screen_width = ReactNative.useWindowDimensions().width
     const main_width = Math.min(screen_width, 450)
 
@@ -98,7 +100,7 @@ function AppUnlock({setOpened}) {
                 fontSize: 30
             }
         })
-
+        const [setupPass, setSetupPass] = React.useState("")
         const [passcode, setPasscode] = React.useState("")
         const defaultCircleStyles = [styles.gray_circle, styles.gray_circle, styles.gray_circle, styles.gray_circle]
         const [circleStyles, setCircleStyles] = React.useState(defaultCircleStyles)
@@ -131,12 +133,48 @@ function AppUnlock({setOpened}) {
                                                 setCircleStyles(newStyles)
                                                 if (newPass.length === 4) {
                                                     setTimeout(() => {
-                                                        if (newPass === e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
-                                                            Navigation.pop()
-                                                            setOpened(false)
-                                                        } else {
-                                                            setPasscode("")
-                                                            setCircleStyles(defaultCircleStyles)
+                                                        if (!isSetup) { // ロック解除(運用)
+                                                            // 成功
+                                                            if (newPass === e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
+                                                                Navigation.pop()
+                                                                callback()
+                                                                Toasts.open({
+                                                                    content: "Successfully unlocked!",
+                                                                    source: StarIcon
+                                                                })
+                                                            } else {  // 失敗
+                                                                setPasscode("")
+                                                                setCircleStyles(defaultCircleStyles)
+                                                                Toasts.open({
+                                                                    content: "Incorrect password. Try again.",
+                                                                    source: FailIcon
+                                                                })
+                                                            }
+                                                        } else { // 設定画面
+                                                            if (!setupPass) { // 1回目
+                                                                setSetupPass(newPass)
+                                                                setPasscode("")
+                                                                setCircleStyles(defaultCircleStyles)
+                                                                Toasts.open({
+                                                                    content: "Retype new passcode to confirm.",
+                                                                    source: InfoIcon
+                                                                })
+                                                            } else { // 2回目
+                                                                if (setupPass === newPass) { // 一致
+                                                                    let key = e(setupPass, `${n[5]}${n[6]}${n[0]}`)
+                                                                    set(name, "passcode", key)
+                                                                    Toasts.open({
+                                                                        content: "Successfully set new passcode!",
+                                                                        source: StarIcon
+                                                                    })
+                                                                } else {
+                                                                    Toasts.open({
+                                                                        content: "Passcode didn't match.",
+                                                                        source: FailIcon
+                                                                    })
+                                                                }
+                                                                Navigation.pop()
+                                                            }
                                                         }
                                                     }, 200)
                                                 }
@@ -189,6 +227,14 @@ function AppUnlock({setOpened}) {
                     options={{
                         headerTitleStyle: {
                             color: 'white',
+                        }, headerLeft: () => {
+                            if (showClose) {
+                                return <Button
+                                    color={header_styles.close.color}
+                                    title='Close'
+                                    onPress={() => Navigation.pop()}
+                                />
+                            }
                         },
                         ...NavigationStack.TransitionPresets.ModalSlideFromBottomIOS
                     }}
@@ -257,9 +303,8 @@ function GuildUnlock({guildId, fn}) {
                             if (event.nativeEvent.text == e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
                                 set(name, guildId, false)
                                 fn(guildId)  // onGuildSelectedの中身を更新
-                                let toast_text = "Successfully unlocked!"
                                 Toasts.open({
-                                    content: toast_text,
+                                    content: "Successfully unlocked!",
                                     source: StarIcon
                                 })
                                 Navigation.pop() // モーダルを閉じる

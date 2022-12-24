@@ -1,12 +1,13 @@
-import {FormInput, View, FormSection, FormDivider, FormRow, FormSwitch, Image, Text, ScrollView} from "enmity/components"
-import {SettingsStore} from "enmity/api/settings"
-import {Constants, Dialog, React, StyleSheet, Toasts} from "enmity/metro/common"
+import {FormInput, View, FormSection, FormRow, FormSwitch, Image, Text, ScrollView} from "enmity/components"
+import {get, SettingsStore} from "enmity/api/settings"
+import {Constants, Navigation, React, StyleSheet, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
 import {Linking} from "enmity/metro/common"
 import {reload} from "enmity/api/native"
 
-import {e} from "../utils/encryption"
 import {checkUpdate} from "../utils/update"
+import {AppUnlock} from "./UnlockModal";
+import {bulk, filters} from "enmity/metro";
 
 interface SettingsProps {
     settings: SettingsStore
@@ -23,6 +24,7 @@ const InviteIcon = getIDByName('hub-invite')
 // const DevIcon = getIDByName('debug') // ic_hammer_and_chisel_24px / ic_home_remove / ic_progress_wrench_24px
 const LockIcon = getIDByName('ic_lock') // ic_locked_24px
 const UpdateIcon = getIDByName('toast_image_saved')
+const KeyboardIcon = getIDByName('ic_drag_icon_24px')
 
 // setting menu
 export default ({settings}: SettingsProps) => {
@@ -75,29 +77,16 @@ export default ({settings}: SettingsProps) => {
                 </View>
             </View>
             <FormSection title="SETTINGS">
-                <FormInput
-                    value={settings.get("passcode")}
-                    title="Passcode"
-                    placeholder="input your custom passcode here!"
-                    onSubmitEditing={
-                        (event) => {
-                            if (event.nativeEvent.text == "") {
-                                Toasts.open({
-                                    content: "Please enter your custom passcode",
-                                    source: FailIcon,
-                                })
-                            } else {
-                                let key = e(event.nativeEvent.text, `${n[5]}${n[6]}${n[0]}`)
-                                settings.set("passcode", key)
-                                Toasts.open({
-                                    content: "Successfully set new passcode!",
-                                    source: StarIcon,
-                                })
-                            }
-                        }
-                    }
-                    secureTextEntry={true}
-                    keyboardType={'number-pad'}
+                <FormRow
+                    label="Setup Passcode"
+                    trailing={FormRow.Arrow}
+                    leading={<FormRow.Icon source={KeyboardIcon}/>}
+                    subLabel={`Open password setup modal`}
+                    onPress={() => {
+                        Navigation.push(
+                            AppUnlock, {isSetup: true}
+                        )
+                    }}
                 />
                 <FormRow
                     label="Reload Discord"
@@ -129,7 +118,15 @@ export default ({settings}: SettingsProps) => {
                         <FormSwitch
                             value={settings.getBoolean("lock_app", false)}
                             onValueChange={(value) => {
-                                settings.set("lock_app", value)
+                                if (value && (settings.get("passcode") === undefined)) {
+                                    Toasts.open({
+                                        content: "Please set passcode in plugin setting first!",
+                                        source: FailIcon
+                                    })
+                                    value = false
+                                } else {
+                                    settings.set("lock_app", value)
+                                }
                             }}
                         />
                     }

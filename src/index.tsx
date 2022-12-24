@@ -1,7 +1,7 @@
 import {StyleSheet, Constants, Dialog, React, Toasts, Navigation} from 'enmity/metro/common'
 import {Plugin, registerPlugin} from 'enmity/managers/plugins'
-import {bulk, filters, getModule} from 'enmity/metro'
-import {Image, Text, View, TextInput} from 'enmity/components'
+import {bulk, filters} from 'enmity/metro'
+import {Image, Text, View, Button} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
@@ -14,7 +14,7 @@ import {getStoreHandlers} from "./utils/store"
 import {checkUpdate} from "./utils/update"
 import Settings from "./components/Settings"
 import lock from "./components/Commands"
-import {GuildUnlock, AppUnlock} from "./components/UnlockModal"
+import {AppUnlock} from "./components/UnlockModal"
 
 const Patcher = create('K2geLocker')
 
@@ -56,12 +56,12 @@ const K2geLocker: Plugin = {
         // let previous_id = "0"
         let n = this.name
         const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false]]
-        metas.forEach((meta)=>{
+        metas.forEach((meta) => {
             initVariable(meta[0], meta[1])
         })
         // @ts-ignore // passcodeが数字でない場合リセットする
-        if (isNaN(e(get(this.name, "passcode"), `${n[0]}${n[1]}${n[4]}`))) {
-            set(this.name, "passcode", undefined)
+        if (isNaN(e(get(n, "passcode"), `${n[0]}${n[1]}${n[4]}`))) {
+            set(n, "passcode", undefined)
         }
 
 
@@ -85,19 +85,25 @@ const K2geLocker: Plugin = {
         function onGuildSelected(guildId) {
             // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
             Navigation.push(
-                GuildUnlock, {guildId: guildId, fn: moveToUnlockedGuild}
+                AppUnlock, {
+                    callback: () => {
+                        set(n, guildId, false)
+                        moveToUnlockedGuild(guildId)  // onGuildSelectedの中身を更新
+                    }
+                }
             )
         }
 
         // on app state changed
         let opened = false
         Patcher.before(getStoreHandlers("AppStateStore"), "APP_STATE_UPDATE", (self, args, res) => {
-            if (get(this.name, "lock_app") && !opened) { // 既に開いているのにもう一度開くのを防ぐ
+            if (get(n, "lock_app") && !opened) { // 既に開いているのにもう一度開くのを防ぐ
                 Navigation.push(
                     AppUnlock, {
-                        setOpened: (b) => {
-                            opened = b // 変数を共有するのがめんどくさいので無名関数で代用
-                        }
+                        callback: () => {
+                            opened = false // 変数を共有するのがめんどくさいので無名関数で代用
+                        },
+                        showClose: false
                     }
                 )
                 opened = true
@@ -116,7 +122,7 @@ const K2geLocker: Plugin = {
                     // }
                     // previous_id = args[0].guild.id
                     // 先にロックされているかに合わせてonGuildSelectedを編集してから元の関数へ(Patcher.before)
-                    if (get(this.name, args[0].guild.id)) {
+                    if (get(n, args[0].guild.id)) {
                         //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
                         args[0].onGuildSelected = onGuildSelected
                     } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
@@ -133,7 +139,7 @@ const K2geLocker: Plugin = {
             // PopoutMenu : [Object].type.renderにある関数をフックする
             Patcher.after(GuildPopoutMenu.type, 'render', (_, args, res) => {
                 // args[0]: { type: 'guild', title: 'guild_name',  guildId: '', yPos: 120.5, onClose: [Function: onClose]
-                if (get(this.name, args[0].guildId)) {
+                if (get(n, args[0].guildId)) {
                     // 完全置換
                     res.props.rows = [{
                         "icon": KeyIcon2,
@@ -148,20 +154,18 @@ const K2geLocker: Plugin = {
                         "icon": KeyIcon,
                         "text": "Lock Server",
                         "onClick": () => {
-                            if (get(this.name, "passcode") === undefined) {
+                            if (get(n, "passcode") === undefined) {
                                 Toasts.open({
                                     content: "Please set passcode in plugin setting before you lock the server!",
                                     source: FailIcon
                                 })
-                            } else if (get(this.name, args[0].guildId)) {
+                            } else if (get(n, args[0].guildId)) {
                                 Toasts.open({
                                     content: "This server is already locked!",
                                     source: FailIcon
                                 })
                             } else {
-                                set(this.name, args[0].guildId, true)
-                                // onGuildSelectedの中身を更新 : Lockの後は妥協
-                                // moveToUnlockedGuild(args[0].guildId)
+                                set(n, args[0].guildId, true)
                                 Toasts.open({
                                     content: "Successfully locked!",
                                     source: StarIcon
@@ -173,12 +177,6 @@ const K2geLocker: Plugin = {
                 return res
             })
 
-            // MEMO
-            // const test = findInReactTree(res, r => r.props?.onSelect) // Patcher.after(test.type, 'type', (_, args, res) =>()) // 下のバー
-            // const test = findInReactTree(res, r => r.props?.accessibilityLabel === "ダイレクトメッセージ" && r.props?.onPress) // 色々なボタンの押下をフックできる
-            // const test = findInReactTree(res, r => r.props?.onPress // これも様々なボタン
-            // ConnectedDCDChat : on Event × たくさん
-
             // 通常Guildが起動時に呼ばれる=先に呼ばれるためこの順序でここまでたどり着いた場合にunpatchする
             unpatch() // 目的のオブジェクトを見つけてフック出来た後は不要なので
         })
@@ -186,7 +184,7 @@ const K2geLocker: Plugin = {
         Patcher.instead(Messages, 'default', (self, args, org) => {
             let res = org.apply(self, args)
             let guild_id = res?.props?.guildId
-            if (guild_id && get(this.name, guild_id)) { // replace return view
+            if (guild_id && get(n, guild_id)) { // replace return view
                 const styles = StyleSheet.createThemedStyleSheet({
                     container: {
                         fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
@@ -204,24 +202,16 @@ const K2geLocker: Plugin = {
                     header: {
                         color: Constants.ThemeColorMap.HEADER_PRIMARY,
                         fontWeight: 'bold',
-                        fontSize: 25
+                        fontSize: 25,
+                        marginBottom: 30
                     },
-                    text: {
-                        color: Constants.ThemeColorMap.HEADER_SECONDARY,
-                        fontSize: 16
-                    },
-                    passcode: {
-                        width: 100,
-                        height: 20,
-                        marginTop: 30,
-                        borderWidth: 1,
-                        borderColor: Constants.ThemeColorMap.HEADER_SECONDARY,
-                        backgroundColor: Constants.ThemeColorMap.HEADER_SECONDARY
+                    button: {
+                         fontSize: 30
                     },
                     footer: {
                         color: Constants.ThemeColorMap.HEADER_SECONDARY,
                         fontSize: 16,
-                        marginTop: 100,
+                        marginTop: 80,
                         marginBottom: 70
                     }
                 })
@@ -230,29 +220,10 @@ const K2geLocker: Plugin = {
                     <Text style={styles.header}>
                         This server is locked!
                     </Text>
-                    <Text style={styles.text}>
-                        enter passcode to unlock
-                    </Text>
-                    <TextInput
-                        style={styles.passcode}
-                        onSubmitEditing={
-                            (event) => {
-                                // password certification
-                                if (event.nativeEvent.text == e(get(this.name, "passcode"), `${n[0]}${n[1]}${n[4]}`)) {
-                                    set(this.name, guild_id, false)
-                                    Toasts.open({
-                                        content: "Successfully unlocked!",
-                                        source: StarIcon
-                                    })
-                                } else {
-                                    Toasts.open({
-                                        content: "Incorrect password. Try again.",
-                                        source: FailIcon
-                                    })
-                                }
-                            }
-                        }
-                        secureTextEntry={true}
+                    <Button
+                        style={styles.button}
+                        onPress={() => onGuildSelected(guild_id)}
+                        title="Unlock"
                     />
                     <Text style={styles.footer}>
                         K2geLocker
@@ -265,9 +236,9 @@ const K2geLocker: Plugin = {
         // on open invite menu
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
             let sheet = args[1]
-            if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(this.name, "inv_hijack")) {
+            if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(n, "inv_hijack")) {
                 let selectedGuildId = SelectedGuildStore.getLastSelectedGuildId()
-                if (get(this.name, selectedGuildId)) {
+                if (get(n, selectedGuildId)) {
                     Dialog.show({
                         title: "K2geLocker",
                         body: "This server is locked",
@@ -280,13 +251,13 @@ const K2geLocker: Plugin = {
                         confirmText: "Lock the Server",
                         cancelText: "Open invite menu",
                         onConfirm: () => {
-                            if (get(this.name, "passcode") === undefined) {
+                            if (get(n, "passcode") === undefined) {
                                 Toasts.open({
                                     content: "Please set passcode in plugin setting before you lock the server!",
                                     source: FailIcon
                                 })
                             } else {
-                                set(this.name, selectedGuildId, true)
+                                set(n, selectedGuildId, true)
                                 Toasts.open({
                                     content: "Successfully locked!",
                                     source: StarIcon
@@ -304,8 +275,8 @@ const K2geLocker: Plugin = {
         })
 
         // check for updates    // 時間は対してかからないがパッチは速さ重視なので最後に
-        if (get(this.name, "check_updates")) {
-            if (get(this.name, "updating")) { // アップデート中はチェックを飛ばす
+        if (get(n, "check_updates")) {
+            if (get(n, "updating")) { // アップデート中はチェックを飛ばす
                 set(name, "updating", false) // Updateを押した後にCancelした場合はinstallPluginのCallbackが呼ばれないためここでオフにする
             } else {
                 checkUpdate()
