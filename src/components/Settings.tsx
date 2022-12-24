@@ -110,6 +110,22 @@ export default ({settings}: SettingsProps) => {
                         />
                     }
                 />
+
+                <FormRow
+                    label="Erase Passcode [TEST]"
+                    trailing={FormRow.Arrow}
+                    onPress={() => {
+                        settings.set("passcode", undefined)
+                    }}
+                />
+                <FormRow
+                    label="Fuck Passcode [TEST]"
+                    trailing={FormRow.Arrow}
+                    onPress={() => {
+                        settings.set("passcode", "k1odd;")
+                    }}
+                />
+
                 <FormRow
                     label="Enable app-wide locking"
                     subLabel={`You can lock entire app with passcode!`}

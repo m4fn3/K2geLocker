@@ -59,13 +59,9 @@ const K2geLocker: Plugin = {
         metas.forEach((meta) => {
             initVariable(meta[0], meta[1])
         })
-        // @ts-ignore // passcodeが数字でない場合リセットする
-        if (isNaN(e(get(n, "passcode"), `${n[0]}${n[1]}${n[4]}`))) {
-            set(n, "passcode", undefined)
-        }
 
-
-        // 前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
+        /*** 前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
+         また、このあたりで重めの処理を置くとフックが遅れて正常に動作しなくなる ***/
 
         // move to unlocked guild
         function moveToUnlockedGuild(guildId) {
@@ -123,8 +119,13 @@ const K2geLocker: Plugin = {
                     // previous_id = args[0].guild.id
                     // 先にロックされているかに合わせてonGuildSelectedを編集してから元の関数へ(Patcher.before)
                     if (get(n, args[0].guild.id)) {
-                        //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
-                        args[0].onGuildSelected = onGuildSelected
+                        if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
+                            set(n, args[0].guild.id, undefined)
+                            args[0].onGuildSelected = undefined
+                        } else {
+                            //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
+                            args[0].onGuildSelected = onGuildSelected
+                        }
                     } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
                         args[0].onGuildSelected = undefined
                     }
@@ -206,7 +207,7 @@ const K2geLocker: Plugin = {
                         marginBottom: 30
                     },
                     button: {
-                         fontSize: 30
+                        fontSize: 30
                     },
                     footer: {
                         color: Constants.ThemeColorMap.HEADER_SECONDARY,
@@ -281,6 +282,12 @@ const K2geLocker: Plugin = {
             } else {
                 checkUpdate()
             }
+        }
+
+        let current_pass = e(get(n, "passcode"), `${n[0]}${n[1]}${n[4]}`)
+        // @ts-ignore // passcodeが数字でなく未設定でない場合リセットする
+        if (isNaN(current_pass) && current_pass !== undefined) {
+            set(n, "passcode", undefined)
         }
     },
     onStop() {
