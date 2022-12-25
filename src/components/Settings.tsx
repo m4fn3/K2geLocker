@@ -1,5 +1,5 @@
-import {FormInput, View, FormSection, FormRow, FormSwitch, Image, Text, ScrollView} from "enmity/components"
-import {get, SettingsStore} from "enmity/api/settings"
+import {View, FormSection, FormRow, FormSwitch, Image, Text, ScrollView} from "enmity/components"
+import {SettingsStore} from "enmity/api/settings"
 import {Constants, Navigation, React, StyleSheet, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
 import {Linking} from "enmity/metro/common"
@@ -7,7 +7,6 @@ import {reload} from "enmity/api/native"
 
 import {checkUpdate} from "../utils/update"
 import {AppUnlock} from "./UnlockModal";
-import {bulk, filters} from "enmity/metro";
 
 interface SettingsProps {
     settings: SettingsStore
@@ -110,29 +109,6 @@ export default ({settings}: SettingsProps) => {
                         />
                     }
                 />
-
-                {/*<FormRow*/}
-                {/*    label="Erase Passcode [TEST]"*/}
-                {/*    trailing={FormRow.Arrow}*/}
-                {/*    onPress={() => {*/}
-                {/*        settings.set("passcode", undefined)*/}
-                {/*    }}*/}
-                {/*/>*/}
-                {/*<FormRow*/}
-                {/*    label="Fuck Passcode [TEST]"*/}
-                {/*    trailing={FormRow.Arrow}*/}
-                {/*    onPress={() => {*/}
-                {/*        settings.set("passcode", "k1odd;")*/}
-                {/*    }}*/}
-                {/*/>*/}
-                {/*<FormRow*/}
-                {/*    label="FORCE LOCK [TEST]"*/}
-                {/*    trailing={FormRow.Arrow}*/}
-                {/*    onPress={() => {*/}
-                {/*        settings.set("lock_app", true)*/}
-                {/*    }}*/}
-                {/*/>*/}
-
                 <FormRow
                     label="Enable app-wide locking"
                     subLabel={`You can lock entire app with passcode!`}
