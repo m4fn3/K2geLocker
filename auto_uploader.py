@@ -21,7 +21,7 @@ port = 80
 ssh_ip = "192.168.11.7"
 user = "root"
 password = "alpine"
-plugin_dir = "/var/mobile/Containers/Data/Application/E1412243-0DCE-4718-945C-16E57F0F8783/Documents/Plugins/"
+plugin_dir = "/var/mobile/Containers/Data/Application/67B6DA71-D282-4C83-A7C8-17C0BF6CB9E1/Documents/Plugins/"
 plugin_name = "K2geLocker"
 
 

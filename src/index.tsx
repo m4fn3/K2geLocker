@@ -101,6 +101,18 @@ const K2geLocker: Plugin = {
             )
         }
 
+         // on logout - そのままログアウトした場合次回起動時にクラッシュしてしまうためログアウト時にプラグインを無効化する()
+        Patcher.before(getStoreHandlers("DeveloperOptionsStore"), "LOGOUT", (self, args, res) => {
+            Dialog.show({
+                title: "K2geLocker",
+                body: "Automatically disabled itself to prevent app from causing weird problems!\nPlease enable plugin manually after you re-login to the account.",
+                confirmText: "See you again!"
+            })
+            this.commands = []
+            Patcher.unpatchAll()
+            // @ts-ignore
+            window.enmity.plugins.disablePlugin("K2geLocker")
+        })
 
         // on app state changed
         let opened = false
