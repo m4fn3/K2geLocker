@@ -90,22 +90,30 @@ const K2geLocker: Plugin = {
             )
         }
 
+        function lockApp() {
+            Navigation.push(
+                AppUnlock, {
+                    callback: () => {
+                        opened = false // 変数を共有するのがめんどくさいので無名関数で代用
+                    },
+                    showClose: false
+                }
+            )
+        }
+
+
         // on app state changed
         let opened = false
+        let isFirstOpen = true
         Patcher.before(getStoreHandlers("AppStateStore"), "APP_STATE_UPDATE", (self, args, res) => {
+            let state = args[0].state
             if (get(n, "lock_app") && !opened) { // 既に開いているのにもう一度開くのを防ぐ
                 if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
                     set(n, "lock_app", false)
-                } else {
-                    Navigation.push(
-                        AppUnlock, {
-                            callback: () => {
-                                opened = false // 変数を共有するのがめんどくさいので無名関数で代用
-                            },
-                            showClose: false
-                        }
-                    )
+                } else if (isFirstOpen || state == "background") { // 初めて開いたとき(activeでもok) または background になったときにロック
+                    lockApp()
                     opened = true
+                    isFirstOpen = false // 常にfalse入れとけばok
                 }
             }
         })
