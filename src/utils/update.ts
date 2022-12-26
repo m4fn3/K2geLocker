@@ -6,15 +6,15 @@ import {reload} from "enmity/api/native"
 // @ts-ignore
 import {name} from '../../manifest.json'
 
-const repo_url = "https://github.com/m4fn3/K2geLocker"
-const manifest_url = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/manifest.json"
-const install_url = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js"
-const changelog_url = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/changelogs.json"
+const repoURL = "https://github.com/m4fn3/K2geLocker"
+const manifestURL = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/manifest.json"
+const installURL = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js"
+const changelogURL = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/changelogs.json"
 
 
 function updatePlugin(from, to) {
     // @ts-ignore
-    window.enmity.plugins.installPlugin(install_url, () => {
+    window.enmity.plugins.installPlugin(installURL, () => {
         Dialog.show({
             title: "K2geLocker",
             body: `Updated from ${from} to ${to}!\nDo you want to reload Discord now?`,
@@ -27,12 +27,12 @@ function updatePlugin(from, to) {
 
 
 function checkUpdate(forceUpdate = false) {
-    REST.get(manifest_url).then(manifestRaw => {
+    REST.get(manifestURL).then(manifestRaw => {
         const manifest = JSON.parse(manifestRaw.text)
         const plugin = getPlugin(manifest.name)
         if (manifest.version.localeCompare(plugin.version, undefined, {numeric: true}) === 1) {
             if (forceUpdate || (!forceUpdate && get(name, "ignored") != manifest.version)) {
-                REST.get(changelog_url).then(changelogRaw => {
+                REST.get(changelogURL).then(changelogRaw => {
                     const changelogs = JSON.parse(changelogRaw.text)
                     let changes = ""
                     if (changelogs[manifest.version]){
@@ -65,7 +65,7 @@ function checkUpdate(forceUpdate = false) {
                 body: "Failed to check for updates. Please check GitHub manually.",
                 confirmText: "GitHub",
                 cancelText: "Close",
-                onConfirm: () => Linking.openURL(repo_url),
+                onConfirm: () => Linking.openURL(repoURL),
             })
         }
     })
