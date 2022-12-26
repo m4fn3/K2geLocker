@@ -6,8 +6,11 @@ Add this download link in plugin setting of Enmity.
 https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 
 ## Usage
-- Set your passcode in plugin setting.
+- Set your passcode in plugin setting first.
 - **Reload Discord after enabling plugin from setting to properly initialize K2gelocker, or you will face problems.**
+
+App Lock:
+- Enable app-wide locking in settings. 
 
 Server Lock:
 - Long press server icon, and select "Lock Server" to lock the server.<br>
@@ -17,6 +20,9 @@ Server Lock:
 ## ScreenShot
 Preview video:
 https://cdn.discordapp.com/attachments/887259186918998046/1056581692804055060/K2geLocker.mp4
+
+## Changelogs
+Check changelogs.json for details!
 
 ## Dev
 ### build
