@@ -1,6 +1,6 @@
 import {StyleSheet, Constants, Dialog, React, Toasts, Navigation} from 'enmity/metro/common'
 import {Plugin, registerPlugin} from 'enmity/managers/plugins'
-import {bulk, filters} from 'enmity/metro'
+import {bulk, filters, getModule} from 'enmity/metro'
 import {Image, Text, View, Button} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
@@ -33,6 +33,18 @@ const [
     filters.byProps("_currentDispatchActionType", "_subscriptions", "_waitQueue")
 )
 
+const [
+    AppStateStore,
+    DeveloperOptionsStore,
+    ModalDeprecatedStore,
+    GatewayConnectionStore
+] = [
+    getStoreHandlers("AppStateStore"),
+    getStoreHandlers("DeveloperOptionsStore"),
+    getStoreHandlers("ModalDeprecatedStore"),
+    getStoreHandlers("GatewayConnectionStore")
+]
+
 // asset resources
 const LockIcon = getIDByName('nsfw_gate_lock')
 const StarIcon = getIDByName('img_nitro_star')
@@ -60,8 +72,16 @@ const K2geLocker: Plugin = {
             initVariable(meta[0], meta[1])
         })
 
-        /*** 前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
-         また、このあたりで重めの処理を置くとフックが遅れて正常に動作しなくなる ***/
+        /*** NOTE
+         前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
+         また、このあたりで重めの処理を置くとフックが遅れて正常に動作しなくなる
+         ここにパッチをおきまくらずに速さ重視でないものは後ろに回せ！！
+         -----
+         LockServerの選択肢が出てこない -> 重い処理等でパッチ遅れ
+         APPLOCKがでてこない -> 強制的に閉じられてててopenedがバグってる
+         ログが見れない -> stackにpushして後でまとめてprint
+         なぜかどこかでとまってる -> try~catchしてeをstackにpush
+         ***/
 
         // move to unlocked guild
         function moveToUnlockedGuild(guildId) {
@@ -101,23 +121,10 @@ const K2geLocker: Plugin = {
             )
         }
 
-         // on logout - そのままログアウトした場合次回起動時にクラッシュしてしまうためログアウト時にプラグインを無効化する()
-        Patcher.before(getStoreHandlers("DeveloperOptionsStore"), "LOGOUT", (self, args, res) => {
-            Dialog.show({
-                title: "K2geLocker",
-                body: "Automatically disabled itself to prevent app from causing weird problems!\nPlease enable plugin manually after you re-login to the account.",
-                confirmText: "See you again!"
-            })
-            this.commands = []
-            Patcher.unpatchAll()
-            // @ts-ignore
-            window.enmity.plugins.disablePlugin("K2geLocker")
-        })
-
         // on app state changed
         let opened = false
         let isFirstOpen = true
-        Patcher.before(getStoreHandlers("AppStateStore"), "APP_STATE_UPDATE", (self, args, res) => {
+        Patcher.before(AppStateStore, "APP_STATE_UPDATE", (self, args, res) => {
             let state = args[0].state
             if (get(n, "lock_app") && !opened) { // 既に開いているのにもう一度開くのを防ぐ
                 if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
@@ -205,6 +212,7 @@ const K2geLocker: Plugin = {
             // 通常Guildが起動時に呼ばれる=先に呼ばれるためこの順序でここまでたどり着いた場合にunpatchする
             unpatch() // 目的のオブジェクトを見つけてフック出来た後は不要なので
         })
+
         // on load channel
         Patcher.instead(Messages, 'default', (self, args, org) => {
             let res = org.apply(self, args)
@@ -258,6 +266,7 @@ const K2geLocker: Plugin = {
                 return res
             }
         })
+
         // on open invite menu
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
             let sheet = args[1]
@@ -299,6 +308,40 @@ const K2geLocker: Plugin = {
             }
         })
 
+        // on logout - そのままログアウトした場合次回起動時にクラッシュしてしまうためログアウト時にプラグインを無効化する()
+        Patcher.before(DeveloperOptionsStore, "LOGOUT", (self, args, res) => {
+            Dialog.show({
+                title: "K2geLocker",
+                body: "Automatically disabled itself to prevent app from causing weird problems!\nPlease enable plugin manually after you re-login to the account.",
+                confirmText: "See you again!"
+            })
+            this.commands = []
+            Patcher.unpatchAll()
+            // @ts-ignore
+            window.enmity.plugins.disablePlugin("K2geLocker")
+        })
+
+        let isPushNotificationClicked = false
+        let modalCloseFuncCallStat = []
+        // detect push notification click
+        Patcher.before(GatewayConnectionStore, "PUSH_NOTIFICATION_CLICK", (self, args, res) => {
+            isPushNotificationClicked = true
+            modalCloseFuncCallStat = []
+        })
+        // prevent AppLock modal from closing
+        const modalCLoseFuncList = ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]
+        Object.keys(ModalDeprecatedStore).forEach((key) => {
+            if (modalCLoseFuncList.includes(key)) { // 通知からの起動時は様々な関数を読んで片っ端からModalを閉じようとするので、一度のみ処理を止める
+                Patcher.instead(ModalDeprecatedStore, key, (self, args, org) => {
+                    if (isPushNotificationClicked && !Object.keys(modalCloseFuncCallStat).includes(key)) {
+                        modalCloseFuncCallStat[key] = true  // 全て止め終わってもmodalCloseFuncCallStatに全て入って実質isPushNotificationLocked=trueと同じ
+                    } else {
+                        org.apply(self, args)
+                    }
+                })
+            }
+        })
+
         // check for updates    // 時間は対してかからないがパッチは速さ重視なので最後に
         if (get(n, "check_updates")) {
             if (get(n, "updating")) { // アップデート中はチェックを飛ばす
@@ -313,6 +356,8 @@ const K2geLocker: Plugin = {
         if (isNaN(current_pass) && current_pass !== undefined) {
             set(n, "passcode", undefined)
         }
+
+
     },
     onStop() {
         this.commands = []

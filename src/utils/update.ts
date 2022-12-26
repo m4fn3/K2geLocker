@@ -9,6 +9,8 @@ import {name} from '../../manifest.json'
 const repo_url = "https://github.com/m4fn3/K2geLocker"
 const manifest_url = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/manifest.json"
 const install_url = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js"
+const changelog_url = "https://raw.githubusercontent.com/m4fn3/K2geLocker/master/changelogs.json"
+
 
 function updatePlugin(from, to) {
     // @ts-ignore
@@ -30,16 +32,23 @@ function checkUpdate(forceUpdate = false) {
         const plugin = getPlugin(manifest.name)
         if (manifest.version.localeCompare(plugin.version, undefined, {numeric: true}) === 1) {
             if (forceUpdate || (!forceUpdate && get(name, "ignored") != manifest.version)) {
-                Dialog.show({
-                    title: "K2geLocker",
-                    body: `New version v${manifest.version} is available!`,
-                    confirmText: "Update",
-                    cancelText: "Ignore",
-                    onConfirm: () => {
-                        set(name, "updating", true)
-                        updatePlugin(plugin.version, manifest.version)
-                    },
-                    onCancel: () => set(name, "ignored", manifest.version)
+                REST.get(changelog_url).then(changelogRaw => {
+                    const changelogs = JSON.parse(changelogRaw.text)
+                    let changes = ""
+                    if (changelogs[manifest.version]){
+                        changes = `\n\n- Changelogs\n${changelogs[manifest.version]}`
+                    }
+                    Dialog.show({
+                        title: "K2geLocker",
+                        body: `New version v${manifest.version} is available!${changes}`,
+                        confirmText: "Update",
+                        cancelText: "Ignore",
+                        onConfirm: () => {
+                            set(name, "updating", true)
+                            updatePlugin(plugin.version, manifest.version)
+                        },
+                        onCancel: () => set(name, "ignored", manifest.version)
+                    })
                 })
             }
         } else if (forceUpdate) {
