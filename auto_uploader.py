@@ -10,7 +10,7 @@ import paramiko
 import scp
 import time
 import threading
-from http.server import HTTPServer, CGIHTTPRequestHandler
+from http.server import HTTPServer, CGIHTTPRequestHandler, SimpleHTTPRequestHandler
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
@@ -25,12 +25,20 @@ plugin_dir = "/var/mobile/Containers/Data/Application/67B6DA71-D282-4C83-A7C8-17
 plugin_name = "K2geLocker"
 
 
-def http_server():
-    class Handler(CGIHTTPRequestHandler):
-        pass
+class HTTPHandler(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_my_headers()
+        SimpleHTTPRequestHandler.end_headers(self)
 
+    def send_my_headers(self):
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+
+
+def http_server():
     # http server
-    httpd = HTTPServer(("", port), Handler)
+    httpd = HTTPServer(("", port), HTTPHandler)
     httpd.serve_forever()
 
 

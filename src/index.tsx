@@ -351,10 +351,14 @@ const K2geLocker: Plugin = {
             }
         }
 
-        let currentPass = e(get(n, "passcode"), `${n[0]}${n[1]}${n[4]}`)
-        // @ts-ignore // passcodeが数字でなく未設定でない場合リセットする (例外処理)[下位互換性]
-        if (isNaN(currentPass) && currentPass !== undefined) {
-            set(n, "passcode", undefined)
+
+        let rawPass = get(name, "passcode")
+        if (rawPass !== undefined) { // undefinedをe()にかけるとエラーになるので注意 : 'Cannot read property \'length\' of undefined'
+            let currentPass = e(rawPass, `${n[0]}${n[1]}${n[4]}`)
+            // @ts-ignore // passcodeが数字でなく未設定でない場合リセットする (例外処理)[下位互換性]
+            if (isNaN(currentPass)) {
+                set(n, "passcode", undefined)
+            }
         }
 
 

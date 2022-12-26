@@ -101,13 +101,15 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
             }
         })
 
-        let currentPass = e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)
+        let rawPass = get(name, "passcode") // パスワード未設定の場合undefinedになるためe()に駆ける前に分けてさらに"pass"を代入してcurrentPassのlengthをとれるようにする
+        let currentPass = rawPass === undefined ? "pass" : e(rawPass, `${n[5]}${n[6]}${n[0]}`)
 
         const [setupPass, setSetupPass] = React.useState("")
         const [passcode, setPasscode] = React.useState("")
         let defaultCircleStyles = new Array(currentPass.length).fill(styles.gray_circle)
         const [circleStyles, setCircleStyles] = React.useState(defaultCircleStyles) // この配列の長さでパスワードの長さを管理する
         let titleText = isSetup ? "Enter new passcode" : "Enter passcode "
+
 
         return (
             <View style={styles.container}>
