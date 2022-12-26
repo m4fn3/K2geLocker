@@ -1,5 +1,5 @@
 # K2geLocker
-A plugin of [Enmity](https://enmity.app/) to lock the specific server with passcode.
+A plugin of [Enmity](https://enmity.app/) to lock app / server with passcode!
 
 ## Install
 Add this download link in plugin setting of Enmity.
@@ -8,6 +8,8 @@ https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 ## Usage
 - Set your passcode in plugin setting.
 - **Reload Discord after enabling plugin from setting to properly initialize K2gelocker, or you will face problems.**
+
+Server Lock:
 - Long press server icon, and select "Lock Server" to lock the server.<br>
   Also you can tap "Invite" button and select "Lock the Server" or use /lock command to lock the server.
 - Select server icon and modal to unlock server will show up.
