@@ -351,9 +351,9 @@ const K2geLocker: Plugin = {
             }
         }
 
-        let current_pass = e(get(n, "passcode"), `${n[0]}${n[1]}${n[4]}`)
+        let currentPass = e(get(n, "passcode"), `${n[0]}${n[1]}${n[4]}`)
         // @ts-ignore // passcodeが数字でなく未設定でない場合リセットする (例外処理)[下位互換性]
-        if (isNaN(current_pass) && current_pass !== undefined) {
+        if (isNaN(currentPass) && currentPass !== undefined) {
             set(n, "passcode", undefined)
         }
 

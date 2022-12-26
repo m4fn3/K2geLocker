@@ -100,10 +100,13 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
                 fontSize: 30
             }
         })
+
+        let currentPass = e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)
+
         const [setupPass, setSetupPass] = React.useState("")
         const [passcode, setPasscode] = React.useState("")
-        const defaultCircleStyles = [styles.gray_circle, styles.gray_circle, styles.gray_circle, styles.gray_circle]
-        const [circleStyles, setCircleStyles] = React.useState(defaultCircleStyles)
+        let defaultCircleStyles = new Array(currentPass.length).fill(styles.gray_circle)
+        const [circleStyles, setCircleStyles] = React.useState(defaultCircleStyles) // この配列の長さでパスワードの長さを管理する
         let titleText = isSetup ? "Enter new passcode" : "Enter passcode "
 
         return (
@@ -112,10 +115,9 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
                     <Text style={styles.titleText}>{titleText}</Text>
                 </View>
                 <View style={styles.circleBox}>
-                    <View style={circleStyles[0]}/>
-                    <View style={circleStyles[1]}/>
-                    <View style={circleStyles[2]}/>
-                    <View style={circleStyles[3]}/>
+                    {circleStyles.map((val, idx) =>
+                        <View style={circleStyles[idx]}/>
+                    )}
                 </View>
                 <View style={styles.numberBox}>
                     {
@@ -132,11 +134,11 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
                                                 let newStyles = circleStyles
                                                 newStyles[newPass.length - 1] = styles.white_circle
                                                 setCircleStyles(newStyles)
-                                                if (newPass.length === 4) {
+                                                if (newPass.length === circleStyles.length) { // パスワードの長さに達したとき
                                                     setTimeout(() => {
                                                         if (!isSetup) { // ロック解除(運用)
                                                             // 成功
-                                                            if (newPass === e(get(name, "passcode"), `${n[5]}${n[6]}${n[0]}`)) {
+                                                            if (newPass === currentPass) {
                                                                 Navigation.pop()
                                                                 callback()
                                                                 Toasts.open({
@@ -154,7 +156,8 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
                                                         } else { // 設定画面
                                                             if (!setupPass) { // 1回目
                                                                 setSetupPass(newPass)
-                                                                setPasscode("")
+                                                                setPasscode("") // defaultCircleStyleは更新されないのでcircleStylesから作り直す
+                                                                defaultCircleStyles = new Array(circleStyles.length).fill(styles.gray_circle)
                                                                 setCircleStyles(defaultCircleStyles)
                                                                 Toasts.open({
                                                                     content: "Retype new passcode to confirm.",
@@ -201,6 +204,21 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
                         })
                     }
                 </View>
+                <View>
+                    {   // 条件:設定画面の一回目で絞って配列作成
+                        [1].filter((f) => isSetup && !setupPass).map((f) =>
+                            <Button
+                                onPress={() => {
+                                    let newLength = circleStyles.length === 4 ? 6 : 4
+                                    defaultCircleStyles = new Array(newLength).fill(styles.gray_circle)
+                                    setCircleStyles(defaultCircleStyles)  // 設定をリセットする
+                                    setPasscode("")
+                                }}
+                                title="Change passcode length"
+                            />
+                        )
+                    }
+                </View>
             </View>
         )
     }
@@ -244,7 +262,6 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
         </NavigationNative.NavigationContainer>
     )
 }
-
 
 
 export {AppUnlock}

@@ -1,7 +1,7 @@
 {
    "name": "k2ge-locker",
    "description": "A plugin of Enmity to lock the specific server with passcode.",
-   "version": "1.2.2",
+   "version": "1.2.3",
    "license": "GPL-3.0",
    "author": "mafu (Zoey & eternal for template)",
    "scripts": {
