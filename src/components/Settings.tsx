@@ -7,6 +7,8 @@ import {reload} from "enmity/api/native"
 
 import {checkUpdate} from "../utils/update"
 import {AppUnlock} from "./UnlockModal";
+// @ts-ignore
+import {version} from '../../manifest.json'
 
 interface SettingsProps {
     settings: SettingsStore
@@ -61,6 +63,12 @@ export default ({settings}: SettingsProps) => {
             paddingBottom: 3,
             justifyContent: "center",
             alignItems: "center"
+        },
+        footer: {
+            color: Constants.ThemeColorMap.HEADER_SECONDARY,
+            textAlign: 'center',
+            paddingTop: 10,
+            paddingBottom: 20
         }
     })
     return (
@@ -97,19 +105,6 @@ export default ({settings}: SettingsProps) => {
                     }}
                 />
                 <FormRow
-                    label="Enable invitation menu hijacking"
-                    subLabel={`Useful for iPad on which can't long press icon. For servers with inv disabled, use /lock command.`}
-                    leading={<FormRow.Icon source={InviteIcon}/>}
-                    trailing={
-                        <FormSwitch
-                            value={settings.getBoolean("inv_hijack", true)}
-                            onValueChange={(value) => {
-                                settings.set("inv_hijack", value)
-                            }}
-                        />
-                    }
-                />
-                <FormRow
                     label="Enable app-wide locking"
                     subLabel={`You can lock entire app with passcode!`}
                     leading={<FormRow.Icon source={LockIcon}/>}
@@ -126,6 +121,19 @@ export default ({settings}: SettingsProps) => {
                                 } else {
                                     settings.set("lock_app", value)
                                 }
+                            }}
+                        />
+                    }
+                />
+                <FormRow
+                    label="Enable invitation menu hijacking"
+                    subLabel={`Useful for iPad on which can't long press icon. For servers with inv disabled, use /lock command.`}
+                    leading={<FormRow.Icon source={InviteIcon}/>}
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("inv_hijack", true)}
+                            onValueChange={(value) => {
+                                settings.set("inv_hijack", value)
                             }}
                         />
                     }
@@ -167,6 +175,9 @@ export default ({settings}: SettingsProps) => {
                     }}
                 />
             </FormSection>
+            <Text style={styles.footer}>
+                {`v${version}`}
+            </Text>
         </ScrollView>
     )
 }
