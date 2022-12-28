@@ -44,7 +44,7 @@ function checkUpdate(forceUpdate = false) {
                         confirmText: "Update",
                         cancelText: "Ignore",
                         onConfirm: () => {
-                            set(name, "updating", true)
+                            set(name, "_updating", true)
                             updatePlugin(plugin.version, manifest.version)
                         },
                         onCancel: () => set(name, "ignored", manifest.version)

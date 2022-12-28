@@ -114,7 +114,7 @@ const K2geLocker: Plugin = {
             Navigation.push(
                 AppUnlock, {
                     callback: () => {
-                        opened = false // 変数を共有するのがめんどくさいので無名関数で代用
+                        set(n, "_locked", false)
                     },
                     showClose: false
                 }
@@ -122,16 +122,18 @@ const K2geLocker: Plugin = {
         }
 
         // on app state changed
-        let opened = false
         let isFirstOpen = true
+        if (get(n, "lock_app") && get(n, "_locked") && get(n, "passcode") !== undefined){ // ロック時にreloadした場合ロックを継続できるように対処
+            lockApp()
+        }
         Patcher.before(AppStateStore, "APP_STATE_UPDATE", (self, args, res) => {
             let state = args[0].state
-            if (get(n, "lock_app") && !opened) { // 既に開いているのにもう一度開くのを防ぐ
+            if (get(n, "lock_app") && !get(n, "_locked")) { // 既に開いているのにもう一度開くのを防ぐ
                 if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
                     set(n, "lock_app", false)
                 } else if (isFirstOpen || state == "background") { // 初めて開いたとき(activeでもok) または background になったときにロック
                     lockApp()
-                    opened = true
+                    set(n, "_locked", true)
                     isFirstOpen = false // 常にfalse入れとけばok
                 }
             }
@@ -344,8 +346,8 @@ const K2geLocker: Plugin = {
 
         // check for updates    // 時間は対してかからないがパッチは速さ重視なので最後に
         if (get(n, "check_updates")) {
-            if (get(n, "updating")) { // アップデート中はチェックを飛ばす
-                set(name, "updating", false) // Updateを押した後にCancelした場合はinstallPluginのCallbackが呼ばれないためここでオフにする
+            if (get(n, "_updating")) { // アップデート中はチェックを飛ばす
+                set(name, "_updating", false) // Updateを押した後にCancelした場合はinstallPluginのCallbackが呼ばれないためここでオフにする
             } else {
                 checkUpdate()
             }

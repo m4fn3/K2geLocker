@@ -1,5 +1,5 @@
 import {View, FormSection, FormRow, FormSwitch, Image, Text, ScrollView} from "enmity/components"
-import {SettingsStore} from "enmity/api/settings"
+import {set, SettingsStore} from "enmity/api/settings"
 import {Constants, Navigation, React, StyleSheet, Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
 import {Linking} from "enmity/metro/common"
@@ -120,6 +120,7 @@ export default ({settings}: SettingsProps) => {
                                     value = false
                                 } else {
                                     settings.set("lock_app", value)
+                                    set(n, "_locked", false) // 基本不要だが念のためON\OFF時にリセットしておく
                                 }
                             }}
                         />

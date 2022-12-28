@@ -6,5 +6,6 @@
   "1.2.0": "Implemented new app-wide lock feature and changed pass format to numbers like OS's default one for better experiences!",
   "1.2.1": "Dealt with the issue that plugin crashes app on logout (thanks to dia for reporting this<3)",
   "1.2.2": "Fix the issue that when you open Discord via notification it will skip locking (thanks to spin for reporting this<3)",
-  "1.2.3": "Added 6 digit passcode support"
+  "1.2.3": "Added 6 digit passcode support",
+  "1.2.4": "Fix the issue that if you reload your app in locked state, it will bypass locking (thanks to 4044 for reporting this<3)"
 }

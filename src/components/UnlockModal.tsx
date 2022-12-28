@@ -110,7 +110,6 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
         const [circleStyles, setCircleStyles] = React.useState(defaultCircleStyles) // この配列の長さでパスワードの長さを管理する
         let titleText = isSetup ? "Enter new passcode" : "Enter passcode "
 
-
         return (
             <View style={styles.container}>
                 <View style={styles.title}>
