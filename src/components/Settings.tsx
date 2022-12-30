@@ -8,7 +8,7 @@ import {reload} from "enmity/api/native"
 import {checkUpdate} from "../utils/update"
 import {AppUnlock} from "./UnlockModal";
 // @ts-ignore
-import {version} from '../../manifest.json'
+import {name, version} from '../../manifest.json'
 
 interface SettingsProps {
     settings: SettingsStore
@@ -16,6 +16,7 @@ interface SettingsProps {
 
 // variables
 const n = "Love K2ge3 lol"
+const K2genmityURL = "https://github.com/m4fn3/K2geLocker/blob/master/K2genmity.md"
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
 const GitHubIcon = getIDByName('img_account_sync_github_white')
@@ -152,7 +153,11 @@ export default ({settings}: SettingsProps) => {
                                     Dialog.show({
                                         title: "K2geLocker",
                                         body: "Installing K2genmity is required to use biometrics authentication feature!",
-                                        confirmText: "Ok"
+                                        confirmText: "Check install instructions",
+                                        cancelText: "Later",
+                                        onConfirm: () => {
+                                            Linking.openURL(K2genmityURL)
+                                        }
                                     })
                                 }
                             }}

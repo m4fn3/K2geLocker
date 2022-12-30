@@ -133,34 +133,40 @@ const K2geLocker: Plugin = {
             authenticate(callback)
         }
 
+        const lockAppCallback = () => {
+            set(n, "_locked", false)
+        }
+
         function lockApp() {
-            const callback = () => {
-                set(n, "_locked", false)
-            }
             Navigation.push(
                 AppUnlock, {
-                    callback: callback,
+                    callback: lockAppCallback,
                     showClose: false
                 }
             )
-            authenticate(callback)
         }
 
         // on app state changed
-        lockApp() // 有効にした時にも出てくるが仕方ない
+        if (get(n, "lock_app") && get(n, "passcode") !== undefined) {
+            lockApp() // 有効にした時にも出てくるが仕方ない
+            authenticate(lockAppCallback)
+        }
+        let lockNext = false
         Patcher.before(AppStateStore, "APP_STATE_UPDATE", (self, args, res) => {
             let state = args[0].state
             if (get(n, "lock_app")) {
                 if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
                     set(n, "lock_app", false)
-                } else if (state == "background") { // 初めて開いたとき(activeでもok) または background になったときにロック
+                } else if (state == "background") { // background になったときにロック
                     if (!get(n, "_locked")) { // 既に開いているのにもう一度開くのを防ぐ
                         lockApp()
                         set(n, "_locked", true)
-                    } else { // 既に開いていてもアプリを開きなおしたら生体認証画面を出す
-                        authenticate(() => {
-                            set(n, "_locked", false)
-                        })
+                    }
+                    lockNext = true // ロックされていてもされてなくても次回active時に認証画面出す
+                } else if (state == "active") { // 認証画面出すことでもinactive/activeが発生するためlockNextで管理
+                    if (get(n, "_locked") && lockNext) {
+                        lockNext = false
+                        authenticate(lockAppCallback)
                     }
                 }
             }
