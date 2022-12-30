@@ -101,7 +101,7 @@ const K2geLocker: Plugin = {
         }
 
         // biometric authentication
-        function authenticate(callback) {
+        function authenticate(callback, interval) {
             if (get(n, "use_bio")) {
                 setTimeout(() => {
                     sendCommand("K2geLocker", ["authentication"], (data) => {
@@ -110,7 +110,7 @@ const K2geLocker: Plugin = {
                             callback()
                         }
                     })
-                }, 100)
+                }, interval)
             }
         }
 
@@ -130,7 +130,7 @@ const K2geLocker: Plugin = {
                     callback: callback
                 }
             )
-            authenticate(callback)
+            authenticate(callback, 300)
         }
 
         const lockAppCallback = () => {
@@ -149,7 +149,7 @@ const K2geLocker: Plugin = {
         // on app state changed
         if (get(n, "lock_app") && get(n, "passcode") !== undefined) {
             lockApp() // 有効にした時にも出てくるが仕方ない
-            authenticate(lockAppCallback)
+            authenticate(lockAppCallback, 100)
         }
         let lockNext = false
         Patcher.before(AppStateStore, "APP_STATE_UPDATE", (self, args, res) => {
@@ -166,7 +166,7 @@ const K2geLocker: Plugin = {
                 } else if (state == "active") { // 認証画面出すことでもinactive/activeが発生するためlockNextで管理
                     if (get(n, "_locked") && lockNext) {
                         lockNext = false
-                        authenticate(lockAppCallback)
+                        authenticate(lockAppCallback, 100)
                     }
                 }
             }
