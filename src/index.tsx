@@ -130,7 +130,7 @@ const K2geLocker: Plugin = {
                     callback: callback
                 }
             )
-            authenticate(callback, 300)
+            authenticate(callback, 300) // モーダルが完全に開くのを待つ
         }
 
         const lockAppCallback = () => {
