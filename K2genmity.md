@@ -5,9 +5,7 @@ K2genmity is modified version of Enmity that include native authentication syste
 ### Jailbroken users
 1. Remove original Enmity tweak
 2. Install K2genmity from my repo: https://m4fn3.github.io/repo/
-3. Profit!
 
 ### Non-jailbroken users
-1. Downlaod K2genmity ipa
+1. Downlaod K2genmity.ipa from https://github.com/m4fn3/K2genmity/releases/latest
 2. Sideload ipa by your preferred ways
-3. Profit!

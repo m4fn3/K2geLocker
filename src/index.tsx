@@ -110,7 +110,7 @@ const K2geLocker: Plugin = {
                             callback()
                         }
                     })
-                }, 300)
+                }, 100)
             }
         }
 

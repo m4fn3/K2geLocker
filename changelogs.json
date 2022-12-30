@@ -8,5 +8,5 @@
   "1.2.2": "Fix the issue that when you open Discord via notification it will skip locking (thanks to spin for reporting this<3)",
   "1.2.3": "Added 6 digit passcode support",
   "1.2.4": "Fix the issue that if you reload your app in locked state, it will bypass locking (thanks to 4044 for reporting this<3)",
-  "1.3.0": "Added biometrics authentication support (using K2genmity is required)"
+  "1.3.0": "Added biometrics authentication support (installing K2genmity is required)"
 }
