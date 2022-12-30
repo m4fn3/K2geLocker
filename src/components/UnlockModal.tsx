@@ -141,11 +141,7 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
                                                             // 成功
                                                             if (newPass === currentPass) {
                                                                 Navigation.pop()
-                                                                callback()
-                                                                Toasts.open({
-                                                                    content: "Successfully unlocked!",
-                                                                    source: StarIcon
-                                                                })
+                                                                callback() // callback関数でそれぞれの処理をする
                                                             } else {  // 失敗
                                                                 setPasscode("")
                                                                 setCircleStyles(defaultCircleStyles)

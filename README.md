@@ -7,7 +7,7 @@ https://raw.githubusercontent.com/m4fn3/K2geLocker/master/dist/K2geLocker.js
 
 ## Usage
 - Set your passcode in plugin setting first.
-- **Reload Discord after enabling plugin from setting to properly initialize K2gelocker, or you will face problems.**
+- **Reload Discord after enabling plugin from setting to properly initialize K2gelocker**
 
 App Lock:
 - Enable app-wide locking in settings. 
@@ -17,12 +17,16 @@ Server Lock:
   Also you can tap "Invite" button and select "Lock the Server" or use /lock command to lock the server.
 - Select server icon and modal to unlock server will show up.
 
+Biometrics Authentication:
+- **You need to install K2genmity which is modified version of Enmity that include native authentication system**
+- check [K2genmity.md](https://github.com/m4fn3/K2geLocker/blob/master/K2genmity.md) for install instructions!
+
 ## ScreenShot
 Preview video:
 https://cdn.discordapp.com/attachments/887259186918998046/1056581692804055060/K2geLocker.mp4
 
 ## Changelogs
-Check changelogs.json for details!
+Check [changelogs.json](https://github.com/m4fn3/K2geLocker/blob/master/changelogs.json) for details!
 
 ## Dev
 ### build

@@ -18,10 +18,12 @@ from watchdog.observers import Observer
 # HTTP
 port = 80
 # SSH
-ssh_ip = "192.168.11.7"
+# ssh_ip = "192.168.11.7"
+ssh_ip = "192.168.11.18"  # iphone7
 user = "root"
 password = "alpine"
-plugin_dir = "/var/mobile/Containers/Data/Application/67B6DA71-D282-4C83-A7C8-17C0BF6CB9E1/Documents/Plugins/"
+# plugin_dir = "/var/mobile/Containers/Data/Application/67B6DA71-D282-4C83-A7C8-17C0BF6CB9E1/Documents/Plugins/"
+plugin_dir = "/var/mobile/Containers/Data/Application/F018D457-7F54-4CB1-AEFA-73DB6754CFE5/Documents/Plugins/"  # iphone7
 plugin_name = "K2geLocker"
 
 

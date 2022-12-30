@@ -1,6 +1,6 @@
 import {View, FormSection, FormRow, FormSwitch, Image, Text, ScrollView} from "enmity/components"
 import {set, SettingsStore} from "enmity/api/settings"
-import {Constants, Navigation, React, StyleSheet, Toasts} from "enmity/metro/common"
+import {Constants, Dialog, Navigation, React, StyleSheet} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
 import {Linking} from "enmity/metro/common"
 import {reload} from "enmity/api/native"
@@ -26,6 +26,7 @@ const InviteIcon = getIDByName('hub-invite')
 const LockIcon = getIDByName('ic_lock') // ic_locked_24px
 const UpdateIcon = getIDByName('toast_image_saved')
 const KeyboardIcon = getIDByName('ic_drag_icon_24px')
+const AuthIcon = getIDByName('voice_bar_phone')
 
 // setting menu
 export default ({settings}: SettingsProps) => {
@@ -113,14 +114,46 @@ export default ({settings}: SettingsProps) => {
                             value={settings.getBoolean("lock_app", false)}
                             onValueChange={(value) => {
                                 if (value && (settings.get("passcode") === undefined)) {
-                                    Toasts.open({
-                                        content: "Please set passcode in plugin setting first!",
-                                        source: FailIcon
-                                    })
                                     value = false
+                                    Dialog.show({
+                                        title: "K2geLocker",
+                                        body: "Please set passcode first!",
+                                        confirmText: "Ok"
+                                    })
                                 } else {
                                     settings.set("lock_app", value)
                                     set(n, "_locked", false) // 基本不要だが念のためON\OFF時にリセットしておく
+                                }
+                            }}
+                        />
+                    }
+                />
+                <FormRow
+                    label="Use biometrics authentication"
+                    subLabel={`**Using K2genmity is required to get Touch/Face ID to work**`}
+                    leading={<FormRow.Icon source={AuthIcon}/>}
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("use_bio", false)}
+                            onValueChange={(value) => {
+                                if (settings.get("_isK2genmity")) {
+                                    if (settings.get("_hasBiometricsPerm")) {
+                                        settings.set("use_bio", value)
+                                    } else {
+                                        value = false
+                                        Dialog.show({
+                                            title: "K2geLocker",
+                                            body: "Please enable biometrics permission by editing Info.plist!",
+                                            confirmText: "Ok"
+                                        })
+                                    }
+                                } else {
+                                    value = false
+                                    Dialog.show({
+                                        title: "K2geLocker",
+                                        body: "Installing K2genmity is required to use biometrics authentication feature!",
+                                        confirmText: "Ok"
+                                    })
                                 }
                             }}
                         />

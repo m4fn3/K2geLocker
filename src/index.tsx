@@ -15,6 +15,7 @@ import {checkUpdate} from "./utils/update"
 import Settings from "./components/Settings"
 import lock from "./components/Commands"
 import {AppUnlock} from "./components/UnlockModal"
+import {sendCommand} from "./utils/native";
 
 const Patcher = create('K2geLocker')
 
@@ -52,8 +53,10 @@ const FailIcon = getIDByName('Small')
 const KeyIcon = getIDByName('ic_locked_24px')
 const KeyIcon2 = getIDByName('ic_full_server_gating_24px')
 
-function initVariable(name, defVal) {
-    if (get("K2geLocker", name) === undefined) {
+function initVariable(name, defVal, force = false) {
+    if (force) {
+        set("K2geLocker", name, defVal)
+    } else if (get("K2geLocker", name) === undefined) {
         set("K2geLocker", name, defVal)
     }
 }
@@ -65,11 +68,11 @@ const K2geLocker: Plugin = {
         this.commands = [lock]
 
         // variables
-        // let previous_id = "0"
         let n = this.name
-        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false]]
+        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false], ["use_bio", false], ["_isK2genmity", false, true], ["_hasBiometricsPerm", false, true]]
         metas.forEach((meta) => {
-            initVariable(meta[0], meta[1])
+            // @ts-ignore
+            initVariable(...meta)
         })
 
         /*** NOTE
@@ -97,44 +100,68 @@ const K2geLocker: Plugin = {
             })
         }
 
+        // biometric authentication
+        function authenticate(callback) {
+            if (get(n, "use_bio")) {
+                setTimeout(() => {
+                    sendCommand("K2geLocker", ["authentication"], (data) => {
+                        if (data == "success") {
+                            Navigation.pop()
+                            callback()
+                        }
+                    })
+                }, 300)
+            }
+        }
+
         // define handler
         function onGuildSelected(guildId) {
+            const callback = () => {
+                set(n, guildId, false)
+                moveToUnlockedGuild(guildId)  // onGuildSelectedの中身を更新
+                Toasts.open({
+                    content: "Successfully unlocked!",
+                    source: StarIcon
+                })
+            }
             // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
             Navigation.push(
                 AppUnlock, {
-                    callback: () => {
-                        set(n, guildId, false)
-                        moveToUnlockedGuild(guildId)  // onGuildSelectedの中身を更新
-                    }
+                    callback: callback
                 }
             )
+            authenticate(callback)
         }
 
         function lockApp() {
+            const callback = () => {
+                set(n, "_locked", false)
+            }
             Navigation.push(
                 AppUnlock, {
-                    callback: () => {
-                        set(n, "_locked", false)
-                    },
+                    callback: callback,
                     showClose: false
                 }
             )
+            authenticate(callback)
         }
 
         // on app state changed
-        let isFirstOpen = true
-        if (get(n, "lock_app") && get(n, "_locked") && get(n, "passcode") !== undefined){ // ロック時にreloadした場合ロックを継続できるように対処
-            lockApp()
-        }
+        lockApp() // 有効にした時にも出てくるが仕方ない
         Patcher.before(AppStateStore, "APP_STATE_UPDATE", (self, args, res) => {
             let state = args[0].state
-            if (get(n, "lock_app") && !get(n, "_locked")) { // 既に開いているのにもう一度開くのを防ぐ
+            if (get(n, "lock_app")) {
                 if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
                     set(n, "lock_app", false)
-                } else if (isFirstOpen || state == "background") { // 初めて開いたとき(activeでもok) または background になったときにロック
-                    lockApp()
-                    set(n, "_locked", true)
-                    isFirstOpen = false // 常にfalse入れとけばok
+                } else if (state == "background") { // 初めて開いたとき(activeでもok) または background になったときにロック
+                    if (!get(n, "_locked")) { // 既に開いているのにもう一度開くのを防ぐ
+                        lockApp()
+                        set(n, "_locked", true)
+                    } else { // 既に開いていてもアプリを開きなおしたら生体認証画面を出す
+                        authenticate(() => {
+                            set(n, "_locked", false)
+                        })
+                    }
                 }
             }
         })
@@ -146,10 +173,6 @@ const K2geLocker: Plugin = {
             if (Guild) {
                 // Guild
                 Patcher.before(Guild.type, 'type', (self, args, res) => { // args[0]: Guild / res: Guild (同じ)
-                    // if (previous_id != args[0].guild.id) {
-                    //     console.log(`-- Guild更新 --${args[0].guild.id}`)
-                    // }
-                    // previous_id = args[0].guild.id
                     // 先にロックされているかに合わせてonGuildSelectedを編集してから元の関数へ(Patcher.before)
                     if (get(n, args[0].guild.id)) {
                         if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
@@ -325,7 +348,7 @@ const K2geLocker: Plugin = {
 
         let isPushNotificationClicked = false
         let modalCloseFuncCallStat = []
-        // detect push notification click
+        // detect push notification click - 通知から起動した場合
         Patcher.before(GatewayConnectionStore, "PUSH_NOTIFICATION_CLICK", (self, args, res) => {
             isPushNotificationClicked = true
             modalCloseFuncCallStat = []
@@ -344,6 +367,14 @@ const K2geLocker: Plugin = {
             }
         })
 
+        // check K2genmity
+        sendCommand("K2geLocker", ["check"], (data) => {
+            set(n, "_isK2genmity", true)
+            if (data == "yes") {
+                set(n, "_hasBiometricsPerm", true)
+            }
+        })
+
         // check for updates    // 時間は対してかからないがパッチは速さ重視なので最後に
         if (get(n, "check_updates")) {
             if (get(n, "_updating")) { // アップデート中はチェックを飛ばす
@@ -353,7 +384,7 @@ const K2geLocker: Plugin = {
             }
         }
 
-
+        // backward compatibility
         let rawPass = get(name, "passcode")
         if (rawPass !== undefined) { // undefinedをe()にかけるとエラーになるので注意 : 'Cannot read property \'length\' of undefined'
             let currentPass = e(rawPass, `${n[0]}${n[1]}${n[4]}`)
