@@ -87,7 +87,7 @@ const K2geLocker: Plugin = {
          ***/
 
         // move to unlocked guild
-        function moveToUnlockedGuild(guildId) {
+        function moveToGuild(guildId) {
             let channelId = SelectedChannelStore.getMostRecentSelectedTextChannelId(guildId)
             FluxDispatcher.dispatch({
                 type: 'CHANNEL_SELECT',
@@ -118,7 +118,7 @@ const K2geLocker: Plugin = {
         function onGuildSelected(guildId) {
             const callback = () => {
                 set(n, guildId, false)
-                moveToUnlockedGuild(guildId)  // onGuildSelectedの中身を更新
+                moveToGuild(guildId)  // onGuildSelectedの中身を更新
                 Toasts.open({
                     content: "Successfully unlocked!",
                     source: StarIcon
@@ -228,6 +228,10 @@ const K2geLocker: Plugin = {
                                         })
                                     } else {
                                         set(n, args[0].guildId, true)
+                                        let selectedGuildId = SelectedGuildStore.getLastSelectedGuildId()
+                                        if (args[0].guildId !== selectedGuildId){ // 別のサーバーを選択した状態でロックした場合はそのサーバーに移動して更新する
+                                            moveToGuild(args[0].guildId)
+                                        }
                                         Toasts.open({
                                             content: "Successfully locked!",
                                             source: StarIcon
