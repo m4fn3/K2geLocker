@@ -10,7 +10,7 @@ import {findInReactTree} from 'enmity/utilities'
 // @ts-ignore
 import manifest, {name} from '../manifest.json'
 import {e} from "./utils/encryption"
-import {getStoreHandlers} from "./utils/store"
+import {getStoreHandlers, patchView} from "./utils/store"
 import {checkUpdate} from "./utils/update"
 import Settings from "./components/Settings"
 import lock from "./components/Commands"
@@ -172,76 +172,89 @@ const K2geLocker: Plugin = {
             }
         })
 
-        // on render
-        // Viewのrender関数をフックしてひたすら追跡
-        const unpatch = Patcher.after(View, 'render', (_, __, res) => {
-            const Guild = findInReactTree(res, r => r.props?.delayLongPress == 300 && r.props?.onGuildSelected === undefined && r.props?.guild)
-            if (Guild) {
-                // Guild
-                Patcher.before(Guild.type, 'type', (self, args, res) => { // args[0]: Guild / res: Guild (同じ)
-                    // 先にロックされているかに合わせてonGuildSelectedを編集してから元の関数へ(Patcher.before)
-                    if (get(n, args[0].guild.id)) {
-                        if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
-                            set(n, args[0].guild.id, undefined)
-                            args[0].onGuildSelected = undefined
-                        } else {
-                            //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
-                            args[0].onGuildSelected = onGuildSelected
-                        }
-                    } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
-                        args[0].onGuildSelected = undefined
-                    }
-                    // 以上の変更はGuild関数が呼びだされて更新したあとに適用されるのでlock状態変更時には必ず適切な関数を呼びだして更新する必要がある
-                })
-                return // Guildが見つかればもう他はチェックする必要はないので
-            }
-
-            // GuildPopoutMenu : 目的のプロパティを持つオブジェクトを探す -> 結果がundefinedでなければそれが目的のオブジェクトなのでそれをフックする
-            const GuildPopoutMenu = findInReactTree(res, r => r.props?.guildId && r.props?.yPos && r.props?.onClose)
-            if (!GuildPopoutMenu) return  // [Object].props.guildIdが存在するかどうか
-            // PopoutMenu : [Object].type.renderにある関数をフックする
-            Patcher.after(GuildPopoutMenu.type, 'render', (_, args, res) => {
-                // args[0]: { type: 'guild', title: 'guild_name',  guildId: '', yPos: 120.5, onClose: [Function: onClose]
-                if (get(n, args[0].guildId)) {
-                    // 完全置換
-                    res.props.rows = [{
-                        "icon": KeyIcon2,
-                        "text": "Unlock Server",
-                        "onClick": () => {
-                            onGuildSelected(args[0].guildId)
-                        }
-                    }]
-                } else {
-                    // 他の要素と同様の形式で新規追加
-                    res.props.rows.unshift({ // 先頭に追加
-                        "icon": KeyIcon,
-                        "text": "Lock Server",
-                        "onClick": () => {
-                            if (get(n, "passcode") === undefined) {
-                                Toasts.open({
-                                    content: "Please set passcode in plugin setting before you lock the server!",
-                                    source: FailIcon
-                                })
-                            } else if (get(n, args[0].guildId)) {
-                                Toasts.open({
-                                    content: "This server is already locked!",
-                                    source: FailIcon
-                                })
+        // hook views
+        patchView(Patcher, {
+            "Guild": (args, res, unpatch) => {
+                const Guild = findInReactTree(res, r => r.props?.delayLongPress == 300 && r.props?.onGuildSelected === undefined && r.props?.guild)
+                if (Guild) {
+                    // Guild
+                    Patcher.before(Guild.type, 'type', (self, args, res) => { // args[0]: Guild / res: Guild (同じ)
+                        // 先にロックされているかに合わせてonGuildSelectedを編集してから元の関数へ(Patcher.before)
+                        if (get(n, args[0].guild.id)) {
+                            if (get(n, "passcode") === undefined) { // リセット等によりpasscodeが無いがロックされている場合は解除する(例外処理)
+                                set(n, args[0].guild.id, undefined)
+                                args[0].onGuildSelected = undefined
                             } else {
-                                set(n, args[0].guildId, true)
-                                Toasts.open({
-                                    content: "Successfully locked!",
-                                    source: StarIcon
-                                })
+                                //　ロック時 : undefined以外が入っていると、この関数が呼び出され通常の動作をしない
+                                args[0].onGuildSelected = onGuildSelected
                             }
+                        } else { // 非ロック時 : undefinedが入っているときは通常の動作をする
+                            args[0].onGuildSelected = undefined
                         }
+                        // 以上の変更はGuild関数が呼びだされて更新したあとに適用されるのでlock状態変更時には必ず適切な関数を呼びだして更新する必要がある
                     })
+                    unpatch()
                 }
-                return res
-            })
-
-            // 通常Guildが起動時に呼ばれる=先に呼ばれるためこの順序でここまでたどり着いた場合にunpatchする
-            unpatch() // 目的のオブジェクトを見つけてフック出来た後は不要なので
+            },
+            "GuildPopoutMenu": (args, res, unpatch) => {
+                const GuildPopoutMenu = findInReactTree(res, r => r.props?.guildId && r.props?.yPos && r.props?.onClose)
+                if (GuildPopoutMenu) { // [Object].props.guildIdが存在するかどうか
+                    Patcher.after(GuildPopoutMenu.type, 'render', (_, args, res) => {
+                        // args[0]: { type: 'guild', title: 'guild_name',  guildId: '', yPos: 120.5, onClose: [Function: onClose]
+                        if (get(n, args[0].guildId)) {
+                            // 完全置換
+                            res.props.rows = [{
+                                "icon": KeyIcon2,
+                                "text": "Unlock Server",
+                                "onClick": () => {
+                                    onGuildSelected(args[0].guildId)
+                                }
+                            }]
+                        } else {
+                            // 他の要素と同様の形式で新規追加
+                            res.props.rows.unshift({ // 先頭に追加
+                                "icon": KeyIcon,
+                                "text": "Lock Server",
+                                "onClick": () => {
+                                    if (get(n, "passcode") === undefined) {
+                                        Toasts.open({
+                                            content: "Please set passcode in plugin setting before you lock the server!",
+                                            source: FailIcon
+                                        })
+                                    } else if (get(n, args[0].guildId)) {
+                                        Toasts.open({
+                                            content: "This server is already locked!",
+                                            source: FailIcon
+                                        })
+                                    } else {
+                                        set(n, args[0].guildId, true)
+                                        Toasts.open({
+                                            content: "Successfully locked!",
+                                            source: StarIcon
+                                        })
+                                    }
+                                }
+                            })
+                        }
+                        return res
+                    })
+                    unpatch()
+                }
+            },
+            "GuildIcon": (args, res, unpatch) => {
+                const GuildIcon = findInReactTree(res, r => r.props?.animate !== undefined && r.props?.selected !== undefined)
+                if (GuildIcon) {
+                    Patcher.before(GuildIcon, "type", (self, args, res) => {
+                        if (get(n, args[0].guild.id)) { // ロック中のサーバーは色を薄くする
+                            args[0].style["opacity"] = 0.3
+                        } else {
+                            args[0].style["opacity"] = 1
+                        }
+                        // args[0].animate = true // lol
+                    })
+                    // unpatch() // hookをやめると何故か更新されなくなってしまうので継続する
+                }
+            }
         })
 
         // on load channel
@@ -405,7 +418,8 @@ const K2geLocker: Plugin = {
     onStop() {
         this.commands = []
         Patcher.unpatchAll()
-    },
+    }
+    ,
     getSettingsPanel({settings}) {
         return <Settings settings={settings}/>
     }
