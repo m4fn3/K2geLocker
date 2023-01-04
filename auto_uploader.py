@@ -51,7 +51,7 @@ def connect_ssh():
         if filepath.startswith(r".\src") and ("~" not in filename and "." in filename):
             os.system("npm run build")  # build
             client.put(f"./dist/{plugin_name}.js", plugin_dir)  # make sure that plugin name and file name is the same or you will face weird bugs
-            ssh.exec_command(f"rm {plugin_dir}K2geLocker.js.disable")  # remove disable stat if exists
+            ssh.exec_command(f"rm {plugin_dir}{plugin_name}.js.disable")  # remove disable stat if exists
 
     # ssh connection
     with paramiko.SSHClient() as ssh:
