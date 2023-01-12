@@ -4,7 +4,7 @@ import {Toasts} from "enmity/metro/common"
 import {getIDByName} from "enmity/api/assets"
 
 // @ts-ignore
-import { name } from '../../manifest.json'
+import {name} from '../../manifest.json'
 
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
@@ -32,4 +32,20 @@ const lock: Command = {
     }
 }
 
-export default lock
+const unlock: Command = {
+    id: "unlock",
+    name: "unlock",
+    displayName: "unlock",
+    description: "Unlock server lock",
+    displayDescription: "Unlock server lock",
+    type: ApplicationCommandType.Chat,
+    execute: async function (args, message) {
+        set(name, message.guild.id, false)
+        Toasts.open({
+            content: "Successfully unlocked!",
+            source: StarIcon
+        })
+    }
+}
+
+export {lock, unlock}

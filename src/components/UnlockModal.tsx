@@ -44,7 +44,7 @@ const header_styles = StyleSheet.createThemedStyleSheet({
     }
 })
 
-function AppUnlock({callback = null, isSetup = false, showClose = true}) {
+function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=false}) {
     const screen_width = ReactNative.useWindowDimensions().width
     const main_width = Math.min(screen_width, 450)
 
@@ -109,6 +109,7 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
         let defaultCircleStyles = new Array(currentPass.length).fill(styles.gray_circle)
         const [circleStyles, setCircleStyles] = React.useState(defaultCircleStyles) // この配列の長さでパスワードの長さを管理する
         let titleText = isSetup ? "Enter new passcode" : "Enter passcode "
+        titleText = isUnlock ? "Unlock Server Lock" : titleText
 
         return (
             <View style={styles.container}>
@@ -261,4 +262,4 @@ function AppUnlock({callback = null, isSetup = false, showClose = true}) {
 }
 
 
-export {AppUnlock}
+export {Unlock}

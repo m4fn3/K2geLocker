@@ -6,7 +6,7 @@ import {Linking} from "enmity/metro/common"
 import {reload} from "enmity/api/native"
 
 import {checkUpdate} from "../utils/update"
-import {AppUnlock} from "./UnlockModal";
+import {Unlock} from "./UnlockModal";
 // @ts-ignore
 import {name, version} from '../../manifest.json'
 
@@ -20,10 +20,11 @@ const K2genmityURL = "https://github.com/m4fn3/K2geLocker/blob/master/K2genmity.
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
 const GitHubIcon = getIDByName('img_account_sync_github_white')
+const DiscordIcon = getIDByName('Discord')
 const TwitterIcon = getIDByName('img_account_sync_twitter_white')
 const ReloadIcon = getIDByName('ic_message_retry') // ic_sync_24px
 const InviteIcon = getIDByName('hub-invite')
-// const DevIcon = getIDByName('debug') // ic_hammer_and_chisel_24px / ic_home_remove / ic_progress_wrench_24px
+const DevIcon = getIDByName('ic_hammer_and_chisel_24px') // debug / ic_hammer_and_chisel_24px / ic_home_remove / ic_progress_wrench_24px
 const LockIcon = getIDByName('ic_lock') // ic_locked_24px
 const UpdateIcon = getIDByName('toast_image_saved')
 const KeyboardIcon = getIDByName('ic_drag_icon_24px')
@@ -93,7 +94,7 @@ export default ({settings}: SettingsProps) => {
                     subLabel={`Open password setup modal`}
                     onPress={() => {
                         Navigation.push(
-                            AppUnlock, {isSetup: true}
+                            Unlock, {isSetup: true}
                         )
                     }}
                 />
@@ -165,6 +166,19 @@ export default ({settings}: SettingsProps) => {
                     }
                 />
                 <FormRow
+                    label="Persist server lock"
+                    subLabel="Persist locking until you unlock the server lock by long-pressing the icon or using /unlock command."
+                    leading={<FormRow.Icon source={DevIcon}/>}
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("persist_lock", false)}
+                            onValueChange={(value) => {
+                                settings.set("persist_lock", value)
+                            }}
+                        />
+                    }
+                />
+                <FormRow
                     label="Enable invitation menu hijacking"
                     subLabel={`Useful for iPad on which can't long press icon. For servers with inv disabled, use /lock command.`}
                     leading={<FormRow.Icon source={InviteIcon}/>}
@@ -196,7 +210,7 @@ export default ({settings}: SettingsProps) => {
             </FormSection>
             <FormSection title="INFORMATION">
                 <FormRow
-                    label="Twitter @m4fn3"
+                    label="Follow me on Twitter"
                     style={styles.info}
                     trailing={FormRow.Arrow}
                     leading={<FormRow.Icon source={TwitterIcon}/>}
@@ -205,7 +219,16 @@ export default ({settings}: SettingsProps) => {
                     }}
                 />
                 <FormRow
-                    label="GitHub (m4fn3)"
+                    label="Visit my server for help"
+                    style={styles.info}
+                    trailing={FormRow.Arrow}
+                    leading={<FormRow.Icon source={DiscordIcon}/>}
+                    onPress={() => {
+                        Linking.openURL("https://discord.gg/TrCqPTCrdq")
+                    }}
+                />
+                <FormRow
+                    label="Check Source on GitHub"
                     style={styles.info}
                     trailing={FormRow.Arrow}
                     leading={<FormRow.Icon source={GitHubIcon}/>}

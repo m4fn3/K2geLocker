@@ -13,8 +13,8 @@ import {e} from "./utils/encryption"
 import {getStoreHandlers, patchView} from "./utils/store"
 import {checkUpdate} from "./utils/update"
 import Settings from "./components/Settings"
-import lock from "./components/Commands"
-import {AppUnlock} from "./components/UnlockModal"
+import {lock, unlock} from "./components/Commands"
+import {Unlock} from "./components/UnlockModal"
 import {sendCommand} from "./utils/native";
 
 const Patcher = create('K2geLocker')
@@ -25,12 +25,14 @@ const [
     LazyActionSheet,
     SelectedGuildStore,
     SelectedChannelStore,
+    GuildTooltipActionSheets,
     FluxDispatcher
 ] = bulk(
     filters.byName('MessagesConnected', false),
     filters.byProps("openLazy", "hideActionSheet"),
     filters.byProps("getLastSelectedGuildId"),
     filters.byProps("getMostRecentSelectedTextChannelId"),
+    filters.byName('GuildTooltipActionSheets', false),
     filters.byProps("_currentDispatchActionType", "_subscriptions", "_waitQueue")
 )
 
@@ -65,15 +67,16 @@ const K2geLocker: Plugin = {
     ...manifest,
     onStart() {
         // add command
-        this.commands = [lock]
+        this.commands = [lock, unlock]
 
         // variables
         let n = this.name
-        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false], ["use_bio", false], ["_isK2genmity", false, true], ["_hasBiometricsPerm", false, true]]
+        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false], ["use_bio", false], ["persist_lock", false], ["_isK2genmity", false, true], ["_hasBiometricsPerm", false, true]]
         metas.forEach((meta) => {
             // @ts-ignore
             initVariable(...meta)
         })
+        let allowViewing = null
 
         /*** NOTE
          前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
@@ -98,6 +101,7 @@ const K2geLocker: Plugin = {
                 preserveDrawerState: false,
                 source: undefined
             })
+            allowViewing = guildId // メッセージrender時のロックにより見れなくなるため回避できるようIDを保存
         }
 
         // biometric authentication
@@ -115,19 +119,22 @@ const K2geLocker: Plugin = {
         }
 
         // define handler
-        function onGuildSelected(guildId) {
+        function onGuildSelected(guildId, unlock = false) {
+            let isPersistLock = get(name, "persist_lock")
             const callback = () => {
-                set(n, guildId, false)
+                if (!isPersistLock || (isPersistLock && unlock)) {
+                    set(n, guildId, false)
+                    Toasts.open({
+                        content: "Successfully unlocked!",
+                        source: StarIcon
+                    })
+                }
                 moveToGuild(guildId)  // onGuildSelectedの中身を更新
-                Toasts.open({
-                    content: "Successfully unlocked!",
-                    source: StarIcon
-                })
             }
             // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
             Navigation.push(
-                AppUnlock, {
-                    callback: callback
+                Unlock, {
+                    callback: callback, isUnlock: isPersistLock && unlock
                 }
             )
             authenticate(callback, 300) // モーダルが完全に開くのを待つ
@@ -139,7 +146,7 @@ const K2geLocker: Plugin = {
 
         function lockApp() {
             Navigation.push(
-                AppUnlock, {
+                Unlock, {
                     callback: lockAppCallback,
                     showClose: false
                 }
@@ -207,7 +214,7 @@ const K2geLocker: Plugin = {
                                 "icon": KeyIcon2,
                                 "text": "Unlock Server",
                                 "onClick": () => {
-                                    onGuildSelected(args[0].guildId)
+                                    onGuildSelected(args[0].guildId, true)
                                 }
                             }]
                         } else {
@@ -229,7 +236,7 @@ const K2geLocker: Plugin = {
                                     } else {
                                         set(n, args[0].guildId, true)
                                         let selectedGuildId = SelectedGuildStore.getLastSelectedGuildId()
-                                        if (args[0].guildId !== selectedGuildId){ // 別のサーバーを選択した状態でロックした場合はそのサーバーに移動して更新する
+                                        if (args[0].guildId !== selectedGuildId) { // 別のサーバーを選択した状態でロックした場合はそのサーバーに移動して更新する
                                             moveToGuild(args[0].guildId)
                                         }
                                         Toasts.open({
@@ -261,11 +268,19 @@ const K2geLocker: Plugin = {
             }
         })
 
+        // on select server
+        Patcher.instead(GuildTooltipActionSheets, "default", (self, args, org) => {
+            if (allowViewing !== args[0]["guildId"]) { // 別のサーバーに移動したらリセットする
+                allowViewing = null
+            }
+            return org.apply(self, args) // 別のものを返しても全く影響なし
+        })
+
         // on load channel
         Patcher.instead(Messages, 'default', (self, args, org) => {
             let res = org.apply(self, args)
             let guild_id = res?.props?.guildId
-            if (guild_id && get(n, guild_id)) { // replace return view
+            if (guild_id && get(n, guild_id) && allowViewing !== guild_id) { // replace return view // allowViewingで一時的に見れるようにする
                 const styles = StyleSheet.createThemedStyleSheet({
                     container: {
                         fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
@@ -304,7 +319,7 @@ const K2geLocker: Plugin = {
                     <Button
                         style={styles.button}
                         onPress={() => onGuildSelected(guild_id)}
-                        title="Unlock"
+                        title="Enter passcode"
                     />
                     <Text style={styles.footer}>
                         K2geLocker
