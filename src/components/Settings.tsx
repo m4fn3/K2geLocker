@@ -9,6 +9,7 @@ import {checkUpdate} from "../utils/update"
 import {Unlock} from "./UnlockModal";
 // @ts-ignore
 import {name, version} from '../../manifest.json'
+import {getByProps} from "enmity/modules";
 
 interface SettingsProps {
     settings: SettingsStore
@@ -29,6 +30,8 @@ const LockIcon = getIDByName('ic_lock') // ic_locked_24px
 const UpdateIcon = getIDByName('toast_image_saved')
 const KeyboardIcon = getIDByName('ic_drag_icon_24px')
 const AuthIcon = getIDByName('voice_bar_phone')
+
+const Invites = getByProps('acceptInviteAndTransitionToInviteChannel')
 
 // setting menu
 export default ({settings}: SettingsProps) => {
@@ -224,7 +227,11 @@ export default ({settings}: SettingsProps) => {
                     trailing={FormRow.Arrow}
                     leading={<FormRow.Icon source={DiscordIcon}/>}
                     onPress={() => {
-                        Linking.openURL("https://discord.gg/TrCqPTCrdq")
+                        Invites.acceptInviteAndTransitionToInviteChannel({
+                            inviteKey: 'TrCqPTCrdq',
+                            context: {location: 'Invite Button Embed'},
+                            callback: () => {}
+                        })
                     }}
                 />
                 <FormRow
