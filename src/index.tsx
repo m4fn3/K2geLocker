@@ -26,14 +26,16 @@ const [
     SelectedGuildStore,
     SelectedChannelStore,
     GuildTooltipActionSheets,
-    FluxDispatcher
+    RouteUtils,
+    GuildStore
 ] = bulk(
     filters.byName('MessagesConnected', false),
     filters.byProps("openLazy", "hideActionSheet"),
     filters.byProps("getLastSelectedGuildId"),
     filters.byProps("getMostRecentSelectedTextChannelId"),
     filters.byName('GuildTooltipActionSheets', false),
-    filters.byProps("_currentDispatchActionType", "_subscriptions", "_waitQueue")
+    filters.byProps("transitionTo"),
+    filters.byProps("getChannels")
 )
 
 const [
@@ -92,16 +94,13 @@ const K2geLocker: Plugin = {
         // move to unlocked guild
         function moveToGuild(guildId) {
             let channelId = SelectedChannelStore.getMostRecentSelectedTextChannelId(guildId)
-            FluxDispatcher.dispatch({
-                type: 'CHANNEL_SELECT',
-                guildId: guildId,
-                channelId: channelId,
-                messageId: undefined,
-                jumpType: 'ANIMATED',
-                preserveDrawerState: false,
-                source: undefined
-            })
             allowViewing = guildId // メッセージrender時のロックにより見れなくなるため回避できるようIDを保存
+            let channels = GuildStore.getChannels(guildId)["SELECTABLE"]
+            if (channels.length !== 1){ // チャンネル一つの時は諦める
+                let tempChannelId = channels[0].channel.id != channelId ? channels[0].channel.id : channels[1].channel.id
+                RouteUtils.transitionTo(`/channels/${guildId}/${tempChannelId}`, undefined) // 一旦別のチャンネルに移動して
+            }
+            RouteUtils.transitionTo(`/channels/${guildId}/${channelId}`, undefined) // 再読み込みする
         }
 
         // biometric authentication
