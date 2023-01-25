@@ -1,7 +1,7 @@
 {
    "name": "k2ge-locker",
    "description": "Lock App / Server with passcode!",
-   "version": "1.3.3",
+   "version": "1.3.4",
    "license": "GPL-3.0",
    "author": "mafu (Zoey & eternal for template)",
    "scripts": {

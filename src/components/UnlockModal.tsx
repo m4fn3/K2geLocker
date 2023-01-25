@@ -222,7 +222,7 @@ function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=fa
     }
 
     return (
-        <NavigationNative.NavigationContainer>
+        <NavigationNative.NavigationContainer  independent={true}>
             <Settings.Navigator
                 initialRouteName="K2geLocker"
                 style={header_styles.container}
