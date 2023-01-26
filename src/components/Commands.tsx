@@ -48,4 +48,16 @@ const unlock: Command = {
     }
 }
 
+// const k2l: Command = {
+//     id: "K2geLocker",
+//     name: "K2geLocker",
+//     displayName: "K2geLocker",
+//     description: "Open K2geLocker",
+//     displayDescription: "Open K2geLocker",
+//     type: ApplicationCommandType.Chat,
+//     execute: async function (args, message) {
+//         Navigation.push(Unlock, {component: Settings}) // settingsスイッチが正常に動作しない
+//     }
+// }
+
 export {lock, unlock}

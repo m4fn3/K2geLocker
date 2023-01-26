@@ -44,7 +44,7 @@ const header_styles = StyleSheet.createThemedStyleSheet({
     }
 })
 
-function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=false}) {
+function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=false, component=null}) {
     const screen_width = ReactNative.useWindowDimensions().width
     const main_width = Math.min(screen_width, 450)
 
@@ -222,7 +222,7 @@ function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=fa
     }
 
     return (
-        <NavigationNative.NavigationContainer  independent={true}>
+        <NavigationNative.NavigationContainer independent={true}>
             <Settings.Navigator
                 initialRouteName="K2geLocker"
                 style={header_styles.container}
@@ -240,7 +240,7 @@ function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=fa
             >
                 <Settings.Screen
                     name="K2geLocker"
-                    component={page}
+                    component={component ? component : page}
                     options={{
                         headerTitleStyle: {
                             color: 'white',
