@@ -22,6 +22,7 @@ const Patcher = create('K2geLocker')
 // get modules
 const [
     Messages,
+    MessagesWrapper,
     LazyActionSheet,
     SelectedGuildStore,
     SelectedChannelStore,
@@ -30,6 +31,7 @@ const [
     GuildStore
 ] = bulk(
     filters.byName('MessagesConnected', false),
+    filters.byName('MessagesWrapperConnected', false),
     filters.byProps("openLazy", "hideActionSheet"),
     filters.byProps("getLastSelectedGuildId"),
     filters.byProps("getMostRecentSelectedTextChannelId"),
@@ -96,7 +98,7 @@ const K2geLocker: Plugin = {
             let channelId = SelectedChannelStore.getMostRecentSelectedTextChannelId(guildId)
             allowViewing = guildId // メッセージrender時のロックにより見れなくなるため回避できるようIDを保存
             let channels = GuildStore.getChannels(guildId)["SELECTABLE"]
-            if (channels.length !== 1){ // チャンネル一つの時は諦める
+            if (channels.length !== 1) { // チャンネル一つの時は諦める
                 let tempChannelId = channels[0].channel.id != channelId ? channels[0].channel.id : channels[1].channel.id
                 RouteUtils.transitionTo(`/channels/${guildId}/${tempChannelId}`, undefined) // 一旦別のチャンネルに移動して
             }
@@ -255,6 +257,7 @@ const K2geLocker: Plugin = {
                 const GuildIcon = findInReactTree(res, r => r.props?.animate !== undefined && r.props?.selected !== undefined)
                 if (GuildIcon) {
                     Patcher.before(GuildIcon, "type", (self, args, res) => {
+                        console.log(args)
                         if (get(n, args[0].guild.id)) { // ロック中のサーバーは色を薄くする
                             args[0].style["opacity"] = 0.3
                         } else {
@@ -275,61 +278,60 @@ const K2geLocker: Plugin = {
             return org.apply(self, args) // 別のものを返しても全く影響なし
         })
 
-        if (Messages) {  // MessagesConnected < I'm undefined on 163!
-            // on load channel
-            Patcher.instead(Messages, 'default', (self, args, org) => {
-                let res = org.apply(self, args)
-                let guild_id = res?.props?.guildId
-                if (guild_id && get(n, guild_id) && allowViewing !== guild_id) { // replace return view // allowViewingで一時的に見れるようにする
-                    const styles = StyleSheet.createThemedStyleSheet({
-                        container: {
-                            fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
-                            flex: 1,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: Constants.ThemeColorMap.BACKGROUND_PRIMARY
-                        },
-                        image: {
-                            width: 120,
-                            height: 120,
-                            padding: 5,
-                            marginBottom: 30
-                        },
-                        header: {
-                            color: Constants.ThemeColorMap.HEADER_PRIMARY,
-                            fontWeight: 'bold',
-                            fontSize: 25,
-                            marginBottom: 30
-                        },
-                        button: {
-                            fontSize: 30
-                        },
-                        footer: {
-                            color: Constants.ThemeColorMap.HEADER_SECONDARY,
-                            fontSize: 16,
-                            marginTop: 80,
-                            marginBottom: 70
-                        }
-                    })
-                    return <View style={styles.container}>
-                        <Image style={styles.image} source={LockIcon}/>
-                        <Text style={styles.header}>
-                            This server is locked!
-                        </Text>
-                        <Button
-                            style={styles.button}
-                            onPress={() => onGuildSelected(guild_id)}
-                            title="Enter passcode"
-                        />
-                        <Text style={styles.footer}>
-                            K2geLocker
-                        </Text>
-                    </View>
-                } else {
-                    return res
-                }
-            })
-        }
+        const Messages_ = Messages ? Messages : MessagesWrapper
+        // on load channel
+        Patcher.instead(Messages_, 'default', (self, args, org) => {
+            let res = org.apply(self, args)
+            let guild_id = res?.props?.guildId
+            if (guild_id && get(n, guild_id) && allowViewing !== guild_id) { // replace return view // allowViewingで一時的に見れるようにする
+                const styles = StyleSheet.createThemedStyleSheet({
+                    container: {
+                        fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: Constants.ThemeColorMap.BACKGROUND_PRIMARY
+                    },
+                    image: {
+                        width: 120,
+                        height: 120,
+                        padding: 5,
+                        marginBottom: 30
+                    },
+                    header: {
+                        color: Constants.ThemeColorMap.HEADER_PRIMARY,
+                        fontWeight: 'bold',
+                        fontSize: 25,
+                        marginBottom: 30
+                    },
+                    button: {
+                        fontSize: 30
+                    },
+                    footer: {
+                        color: Constants.ThemeColorMap.HEADER_SECONDARY,
+                        fontSize: 16,
+                        marginTop: 80,
+                        marginBottom: 70
+                    }
+                })
+                return <View style={styles.container}>
+                    <Image style={styles.image} source={LockIcon}/>
+                    <Text style={styles.header}>
+                        This server is locked!
+                    </Text>
+                    <Button
+                        style={styles.button}
+                        onPress={() => onGuildSelected(guild_id)}
+                        title="Enter passcode"
+                    />
+                    <Text style={styles.footer}>
+                        K2geLocker
+                    </Text>
+                </View>
+            } else {
+                return res
+            }
+        })
 
         // on open invite menu
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
@@ -438,8 +440,7 @@ const K2geLocker: Plugin = {
     onStop() {
         this.commands = []
         Patcher.unpatchAll()
-    }
-    ,
+    },
     getSettingsPanel({settings}) {
         return <Settings settings={settings}/>
     }
