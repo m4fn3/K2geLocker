@@ -257,7 +257,6 @@ const K2geLocker: Plugin = {
                 const GuildIcon = findInReactTree(res, r => r.props?.animate !== undefined && r.props?.selected !== undefined)
                 if (GuildIcon) {
                     Patcher.before(GuildIcon, "type", (self, args, res) => {
-                        console.log(args)
                         if (get(n, args[0].guild.id)) { // ロック中のサーバーは色を薄くする
                             args[0].style["opacity"] = 0.3
                         } else {
