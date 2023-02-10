@@ -75,7 +75,7 @@ const K2geLocker: Plugin = {
 
         // variables
         let n = this.name
-        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false], ["use_bio", false], ["persist_lock", false], ["_isK2genmity", false, true], ["_hasBiometricsPerm", false, true]]
+        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false], ["use_bio", false], ["persist_lock", false], ["gray_out", true],["_isK2genmity", false, true], ["_hasBiometricsPerm", false, true]]
         metas.forEach((meta) => {
             // @ts-ignore
             initVariable(...meta)
@@ -257,12 +257,11 @@ const K2geLocker: Plugin = {
                 const GuildIcon = findInReactTree(res, r => r.props?.animate !== undefined && r.props?.selected !== undefined)
                 if (GuildIcon) {
                     Patcher.before(GuildIcon, "type", (self, args, res) => {
-                        if (get(n, args[0].guild.id)) { // ロック中のサーバーは色を薄くする
+                        if (get(n, args[0].guild.id) && get(name, "gray_out")) { // ロック中のサーバーは色を薄くする
                             args[0].style["opacity"] = 0.3
                         } else {
                             args[0].style["opacity"] = 1
                         }
-                        // args[0].animate = true // lol
                     })
                     // unpatch() // hookをやめると何故か更新されなくなってしまうので継続する
                 }
@@ -377,7 +376,7 @@ const K2geLocker: Plugin = {
         Patcher.before(DeveloperOptionsStore, "LOGOUT", (self, args, res) => {
             Dialog.show({
                 title: "K2geLocker",
-                body: "Automatically disabled itself to prevent app from causing weird problems!\nPlease enable plugin manually after you re-login to the account.",
+                body: "Automatically disabled itself to prevent app from causing problems!\nPlease enable plugin manually after you re-login to the account.",
                 confirmText: "See you again!"
             })
             this.commands = []

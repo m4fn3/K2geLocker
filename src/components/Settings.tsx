@@ -30,6 +30,7 @@ const LockIcon = getIDByName('ic_lock') // ic_locked_24px
 const UpdateIcon = getIDByName('toast_image_saved')
 const KeyboardIcon = getIDByName('ic_drag_icon_24px')
 const AuthIcon = getIDByName('voice_bar_phone')
+const HideIcon = getIDByName('ic_hide')
 
 const Invites = getByProps('acceptInviteAndTransitionToInviteChannel')
 
@@ -190,6 +191,19 @@ export default ({settings}: SettingsProps) => {
                             value={settings.getBoolean("inv_hijack", true)}
                             onValueChange={(value) => {
                                 settings.set("inv_hijack", value)
+                            }}
+                        />
+                    }
+                />
+                <FormRow
+                    label="Gray out locked server"
+                    subLabel="Gray out the icon of locked servers."
+                    leading={<FormRow.Icon source={HideIcon}/>}
+                    trailing={
+                        <FormSwitch
+                            value={settings.getBoolean("gray_out", true)}
+                            onValueChange={(value) => {
+                                settings.set("gray_out", value)
                             }}
                         />
                     }
