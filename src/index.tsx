@@ -388,7 +388,7 @@ const K2geLocker: Plugin = {
         // prevent AppLock modal from closing (notification, action sheet or something)
         const modalCLoseFuncList = ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]
         Object.keys(ModalDeprecatedStore).forEach((key) => {
-            if (modalCLoseFuncList.includes(key)) { // 通知からの起動時は様々な関数を読んで片っ端からModalを閉じようとするので、一度のみ処理を止める
+            if (modalCLoseFuncList.includes(key)) { // 通知からの起動時は様々な関数を読んで片っ端からModalを閉じようとするので、ロックされている場合は処理を止める
                 Patcher.instead(ModalDeprecatedStore, key, (self, args, org) => {
                     if (!get(n, "_locked")){
                         org.apply(self, args)
