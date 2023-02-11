@@ -23,7 +23,7 @@ ssh_ip = "192.168.11.16"  # iphone7
 user = "root"
 password = "alpine"
 # plugin_dir = "/var/mobile/Containers/Data/Application/67B6DA71-D282-4C83-A7C8-17C0BF6CB9E1/Documents/Plugins/"
-plugin_dir = "/var/mobile/Containers/Data/Application/293DB8C2-BD3E-423C-BD38-F10BF7C0145A/Documents/Plugins/"  # iphone7
+plugin_dir = "/var/mobile/Containers/Data/Application/3ECDFD09-2E41-40F3-B0DD-5C28E6BE662F/Documents/Plugins/"  # iphone7
 plugin_name = "K2geLocker"
 
 
