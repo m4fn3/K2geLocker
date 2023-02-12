@@ -276,7 +276,7 @@ const K2geLocker: Plugin = {
             return org.apply(self, args) // 別のものを返しても全く影響なし
         })
 
-        const Messages_ = Messages ? Messages : MessagesWrapper
+        const Messages_ = Messages ? Messages : MessagesWrapper  // 163+
         // on load channel
         Patcher.instead(Messages_, 'default', (self, args, org) => {
             let res = org.apply(self, args)
@@ -423,8 +423,6 @@ const K2geLocker: Plugin = {
                 set(n, "passcode", undefined)
             }
         }
-
-
     },
     onStop() {
         this.commands = []
