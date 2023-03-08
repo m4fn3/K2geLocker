@@ -27,13 +27,3 @@ https://cdn.discordapp.com/attachments/887259186918998046/1056581692804055060/K2
 
 ## Changelogs
 Check [changelogs.json](https://github.com/m4fn3/K2geLocker/blob/master/changelogs.json) for details!
-
-## Dev
-### build
-`npm run build`
-### auto_uploader.py
-Simple python script to automatically build and send plugin to idevice on editing files
-1. openssh need to be installed on idevice
-2. config your ip/user/password/plugin_dir/plugin_name first
-3. `pip install -r requirements.txt` to install dependencies
-4. `python auto_uploader.py` to start watching
