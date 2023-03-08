@@ -10,7 +10,7 @@ import {findInReactTree} from 'enmity/utilities'
 // @ts-ignore
 import manifest, {name} from '../manifest.json'
 import {e} from "./utils/encryption"
-import {getStoreHandlers, patchView} from "./utils/store"
+import {getStoreHandlers, patchView} from "../../hook"
 import {checkUpdate} from "./utils/update"
 import Settings from "./components/Settings"
 import {lock, unlock} from "./components/Commands"
