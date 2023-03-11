@@ -71,6 +71,8 @@ function initVariable(name, defVal, force = false) {
 const K2geLocker: Plugin = {
     ...manifest,
     onStart() {
+        // Discordのバージョン確認
+
         // コマンド追加
         this.commands = [lock, unlock]
 
