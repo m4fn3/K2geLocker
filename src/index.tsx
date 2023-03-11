@@ -1,7 +1,7 @@
 import {StyleSheet, Constants, Dialog, React, Toasts, Navigation} from 'enmity/metro/common'
 import {Plugin, registerPlugin} from 'enmity/managers/plugins'
 import {bulk, filters} from 'enmity/metro'
-import {Image, Text, View, Button} from 'enmity/components'
+import {Image, Text, View, Button, Modal} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
@@ -19,7 +19,6 @@ import {sendCommand} from "./utils/native"
 
 const Patcher = create('K2geLocker')
 
-// get modules
 const [
     Messages,
     MessagesWrapper,
@@ -28,7 +27,8 @@ const [
     SelectedChannelStore,
     GuildTooltipActionSheets,
     RouteUtils,
-    GuildStore
+    GuildStore,
+    PrivateChannelRecipientsInviteStore
 ] = bulk(
     filters.byName('MessagesConnected', false),
     filters.byName('MessagesWrapperConnected', false),
@@ -37,28 +37,29 @@ const [
     filters.byProps("getMostRecentSelectedTextChannelId"),
     filters.byName('GuildTooltipActionSheets', false),
     filters.byProps("transitionTo"),
-    filters.byProps("getChannels")
+    filters.byProps("getChannels"),
+    filters.byProps("popModal")
 )
 
 const [
     AppStateStore,
     DeveloperOptionsStore,
-    ModalDeprecatedStore,
-    GatewayConnectionStore
+    DefaultRouteStore,
+    ModalDeprecatedStore
 ] = [
     getStoreHandlers("AppStateStore"),
     getStoreHandlers("DeveloperOptionsStore"),
-    getStoreHandlers("ModalDeprecatedStore"),
-    getStoreHandlers("GatewayConnectionStore")
+    getStoreHandlers("DefaultRouteStore"),
+    getStoreHandlers("ModalDeprecatedStore")
 ]
 
-// asset resources
 const LockIcon = getIDByName('nsfw_gate_lock')
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
 const KeyIcon = getIDByName('ic_locked_24px')
 const KeyIcon2 = getIDByName('ic_full_server_gating_24px')
 
+// 環境変数の初期化
 function initVariable(name, defVal, force = false) {
     if (force) {
         set("K2geLocker", name, defVal)
@@ -70,30 +71,26 @@ function initVariable(name, defVal, force = false) {
 const K2geLocker: Plugin = {
     ...manifest,
     onStart() {
-        // add command
+        // let mdls = [Messages, MessagesWrapper, LazyActionSheet, SelectedGuildStore, SelectedChannelStore, GuildStore, GuildTooltipActionSheets, RouteUtils, PrivateChannelRecipientsInviteStore]
+        // mdls.forEach((mdl, idx) => {
+        //     if (!mdl) {
+        //         console.error(`[K2geLocker->init] Failed to get module: ${idx}`)
+        //     }
+        // })
+
+        // コマンド追加
         this.commands = [lock, unlock]
 
-        // variables
+        // 初期化処理
         let n = this.name
-        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false], ["use_bio", false], ["persist_lock", false], ["gray_out", true],["_isK2genmity", false, true], ["_hasBiometricsPerm", false, true]]
+        const metas = [["inv_hijack", true], ["check_updates", true], ["lock_app", false], ["use_bio", false], ["persist_lock", false], ["gray_out", true], ["_isK2genmity", false, true], ["_hasBiometricsPerm", false, true]]
         metas.forEach((meta) => {
             // @ts-ignore
             initVariable(...meta)
         })
         let allowViewing = null
 
-        /*** NOTE
-         前のほうの記述は実行されるのが速いためログに流れないがちゃんと起動時に呼ばれている
-         また、このあたりで重めの処理を置くとフックが遅れて正常に動作しなくなる
-         ここにパッチをおきまくらずに速さ重視でないものは後ろに回せ！！
-         -----
-         LockServerの選択肢が出てこない -> 重い処理等でパッチ遅れ
-         APPLOCKがでてこない -> 強制的に閉じられてててopenedがバグってる
-         ログが見れない -> stackにpushして後でまとめてprint
-         なぜかどこかでとまってる -> try~catchしてeをstackにpush
-         ***/
-
-        // move to unlocked guild
+        // 特定のサーバーへ移動
         function moveToGuild(guildId) {
             let channelId = SelectedChannelStore.getMostRecentSelectedTextChannelId(guildId)
             allowViewing = guildId // メッセージrender時のロックにより見れなくなるため回避できるようIDを保存
@@ -105,24 +102,26 @@ const K2geLocker: Plugin = {
             RouteUtils.transitionTo(`/channels/${guildId}/${channelId}`, undefined) // 再読み込みする
         }
 
-        // biometric authentication
-        function authenticate(callback, interval) {
+        // 生体認証処理
+        function authenticate(interval, callbackBefore = () => void 0, callbackAfter = () => void 0) {
             if (get(n, "use_bio")) {
                 setTimeout(() => {
                     sendCommand("K2geLocker", ["authentication"], (data) => {
                         if (data == "success") {
+                            callbackBefore()
                             Navigation.pop()
-                            callback()
+                            callbackAfter()
                         }
                     })
                 }, interval)
             }
         }
 
-        // define handler
+        // サーバーロックでの選択時の処理
         function onGuildSelected(guildId, unlock = false) {
             let isPersistLock = get(name, "persist_lock")
-            const callback = () => {
+            const callbackBefore = () => {
+                // ロック状態永久保存でない or ロック状態永久保存の解除
                 if (!isPersistLock || (isPersistLock && unlock)) {
                     set(n, guildId, false)
                     Toasts.open({
@@ -130,35 +129,70 @@ const K2geLocker: Plugin = {
                         source: StarIcon
                     })
                 }
+            }
+            const callbackAfter = () => { // Modalを閉じた後でなければ移動が適用されないので後に行う
                 moveToGuild(guildId)  // onGuildSelectedの中身を更新
             }
             // アイコンがおされてOnGSが呼ばれた時点で参照して使用しているので問題なし
             Navigation.push(
                 Unlock, {
-                    callback: callback, isUnlock: isPersistLock && unlock
+                    callbackBefore: callbackBefore, callbackAfter: callbackAfter, isUnlock: isPersistLock && unlock
                 }
             )
-            authenticate(callback, 300) // モーダルが完全に開くのを待つ
+            authenticate(300, callbackBefore, callbackAfter) // モーダルが完全に開くのを待つ
         }
 
+        // アプリロックのコールバック関数
         const lockAppCallback = () => {
             set(n, "_locked", false)
         }
 
+        // アプリロック用のModal表示処理
         function lockApp() {
             Navigation.push(
                 Unlock, {
-                    callback: lockAppCallback,
+                    callbackBefore: lockAppCallback,
                     showClose: false
                 }
             )
         }
 
-        // on app state changed
-        if (get(n, "lock_app") && get(n, "passcode") !== undefined) {
-            lockApp() // 有効にした時にも出てくるが仕方ない
-            authenticate(lockAppCallback, 100)
+        // 通知や起動時のModalを閉じる処理を止める
+        if (ModalDeprecatedStore) { // 164-
+             const modalCloseFuncs = ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]
+            modalCloseFuncs.forEach((key) => {
+                Patcher.instead(ModalDeprecatedStore, key, (self, args, org) => {
+                    if (!get(n, "_locked")) {
+                        org.apply(self, args)
+                    }
+                })
+            })
+        } else if (PrivateChannelRecipientsInviteStore) { // 170+
+            Patcher.instead(PrivateChannelRecipientsInviteStore, "popModal", (self, args, org) => {
+                if (!get(n, "_locked")) {
+                    org.apply(self, args)
+                }
+            })
+            Patcher.instead(PrivateChannelRecipientsInviteStore, "popAllModals", (self, args, org) => {
+                if (!get(n, "_locked")) {
+                    org.apply(self, args)
+                }
+            })
         }
+
+        // 起動時のアプリロックを行う
+        let isFirst = true
+        Patcher.before(DefaultRouteStore, "SAVE_LAST_ROUTE", (self, args, org) => {
+            if (isFirst) {
+                if (get(n, "lock_app") && get(n, "passcode") !== undefined) {
+                    lockApp() // (有効にした時にも出てくるが仕方ない->hook内におくことで回避できている)
+                    authenticate(100, lockAppCallback)
+                }
+                isFirst = false
+            }
+        })
+
+        // アプリの起動/バックグラウンド移行時にアプリのロックを処理する
         let lockNext = false
         Patcher.before(AppStateStore, "APP_STATE_UPDATE", (self, args, res) => {
             let state = args[0].state
@@ -174,13 +208,13 @@ const K2geLocker: Plugin = {
                 } else if (state == "active") { // 認証画面出すことでもinactive/activeが発生するためlockNextで管理
                     if (get(n, "_locked") && lockNext) {
                         lockNext = false
-                        authenticate(lockAppCallback, 100)
+                        authenticate(100, lockAppCallback)
                     }
                 }
             }
         })
 
-        // hook views
+        // サーバーのアイコン押下処理等を行う
         patchView(Patcher, {
             "Guild": (args, res, unpatch) => {
                 const Guild = findInReactTree(res, r => r.props?.delayLongPress == 300 && r.props?.onGuildSelected === undefined && r.props?.guild)
@@ -268,7 +302,7 @@ const K2geLocker: Plugin = {
             }
         })
 
-        // on select server
+        // サーバー選択の記録を行う
         Patcher.instead(GuildTooltipActionSheets, "default", (self, args, org) => {
             if (allowViewing !== args[0]["guildId"]) { // 別のサーバーに移動したらリセットする
                 allowViewing = null
@@ -276,8 +310,8 @@ const K2geLocker: Plugin = {
             return org.apply(self, args) // 別のものを返しても全く影響なし
         })
 
-        const Messages_ = Messages ? Messages : MessagesWrapper  // 163+
-        // on load channel
+        // メッセージ表示ビュー
+        const Messages_ = Messages ? Messages : MessagesWrapper  // 163+対応
         Patcher.instead(Messages_, 'default', (self, args, org) => {
             let res = org.apply(self, args)
             let guild_id = res?.props?.guildId
@@ -331,7 +365,7 @@ const K2geLocker: Plugin = {
             }
         })
 
-        // on open invite menu
+        // 招待生成ActionSheet
         Patcher.instead(LazyActionSheet, "openLazy", (self, args, org) => {
             let sheet = args[1]
             if ((sheet.startsWith("instant-invite") || sheet.startsWith("vanity-url-invite")) && get(n, "inv_hijack")) {
@@ -372,7 +406,7 @@ const K2geLocker: Plugin = {
             }
         })
 
-        // on logout - そのままログアウトした場合次回起動時にクラッシュしてしまうためログアウト時にプラグインを無効化する()
+        // ログアウト検知処理 - そのままログアウトした場合次回起動時にクラッシュしてしまうためログアウト時にプラグインを無効化する()
         Patcher.before(DeveloperOptionsStore, "LOGOUT", (self, args, res) => {
             Dialog.show({
                 title: "K2geLocker",
@@ -385,19 +419,7 @@ const K2geLocker: Plugin = {
             window.enmity.plugins.disablePlugin("K2geLocker")
         })
 
-        // prevent AppLock modal from closing (notification, action sheet or something)
-        const modalCLoseFuncList = ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]
-        Object.keys(ModalDeprecatedStore).forEach((key) => {
-            if (modalCLoseFuncList.includes(key)) { // 通知からの起動時は様々な関数を読んで片っ端からModalを閉じようとするので、ロックされている場合は処理を止める
-                Patcher.instead(ModalDeprecatedStore, key, (self, args, org) => {
-                    if (!get(n, "_locked")){
-                        org.apply(self, args)
-                    }
-                })
-            }
-        })
-
-        // check K2genmity
+        // K2genmity利用の可否を確認
         sendCommand("K2geLocker", ["check"], (data) => {
             set(n, "_isK2genmity", true)
             if (data == "yes") {
@@ -405,7 +427,7 @@ const K2geLocker: Plugin = {
             }
         })
 
-        // check for updates    // 時間は対してかからないがパッチは速さ重視なので最後に
+        // 更新の確認   // 時間は対してかからないがパッチは速さ重視なので最後に
         if (get(n, "check_updates")) {
             if (get(n, "_updating")) { // アップデート中はチェックを飛ばす
                 set(name, "_updating", false) // Updateを押した後にCancelした場合はinstallPluginのCallbackが呼ばれないためここでオフにする
@@ -414,7 +436,7 @@ const K2geLocker: Plugin = {
             }
         }
 
-        // backward compatibility
+        // 下位互換性
         let rawPass = get(name, "passcode")
         if (rawPass !== undefined) { // undefinedをe()にかけるとエラーになるので注意 : 'Cannot read property \'length\' of undefined'
             let currentPass = e(rawPass, `${n[0]}${n[1]}${n[4]}`)
@@ -423,6 +445,7 @@ const K2geLocker: Plugin = {
                 set(n, "passcode", undefined)
             }
         }
+        setTimeout(() => console.error(`[End]`), 3000)
     },
     onStop() {
         this.commands = []

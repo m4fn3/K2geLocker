@@ -44,7 +44,7 @@ const header_styles = StyleSheet.createThemedStyleSheet({
     }
 })
 
-function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=false, component=null}) {
+function Unlock({callbackBefore = () => void 0, callbackAfter = () => void 0, isSetup = false, showClose = true, isUnlock = false, component = null}) {
     const screen_width = ReactNative.useWindowDimensions().width
     const main_width = Math.min(screen_width, 450)
 
@@ -141,8 +141,9 @@ function Unlock({callback = null, isSetup = false, showClose = true, isUnlock=fa
                                                         if (!isSetup) { // ロック解除(運用)
                                                             // 成功
                                                             if (newPass === currentPass) {
+                                                                callbackBefore() // closeModal阻止部分で_lockedがfalseになっていることから正常に閉じられるようにする
                                                                 Navigation.pop()
-                                                                callback() // callback関数でそれぞれの処理をする
+                                                                callbackAfter()
                                                             } else {  // 失敗
                                                                 setPasscode("")
                                                                 setCircleStyles(defaultCircleStyles)
