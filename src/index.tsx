@@ -1,11 +1,12 @@
 import {StyleSheet, Constants, Dialog, React, Toasts, Navigation} from 'enmity/metro/common'
 import {Plugin, registerPlugin} from 'enmity/managers/plugins'
 import {bulk, filters} from 'enmity/metro'
-import {Image, Text, View, Button, Modal} from 'enmity/components'
+import {Image, Text, View, Button} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
 import {findInReactTree} from 'enmity/utilities'
+import {version} from "enmity/api/native"
 
 // @ts-ignore
 import manifest, {name} from '../manifest.json'
@@ -71,8 +72,6 @@ function initVariable(name, defVal, force = false) {
 const K2geLocker: Plugin = {
     ...manifest,
     onStart() {
-        // Discordのバージョン確認
-
         // コマンド追加
         this.commands = [lock, unlock]
 
@@ -416,6 +415,16 @@ const K2geLocker: Plugin = {
             } else {
                 checkUpdate()
             }
+        }
+
+        // Discordのバージョン確認
+        if (version.localeCompare("158.0", undefined, {numeric: true}) < 0 && get(name,"compat") !== version) {
+            Dialog.show({
+                title: "K2geLocker",
+                body: `Your Discord version ${version} is not supported and some features may not work properly. Please update to 158+`,
+                confirmText: "OK"
+            })
+            set(name, "compat", version)
         }
 
         // 下位互換性
