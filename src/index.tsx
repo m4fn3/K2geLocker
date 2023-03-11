@@ -71,13 +71,6 @@ function initVariable(name, defVal, force = false) {
 const K2geLocker: Plugin = {
     ...manifest,
     onStart() {
-        // let mdls = [Messages, MessagesWrapper, LazyActionSheet, SelectedGuildStore, SelectedChannelStore, GuildStore, GuildTooltipActionSheets, RouteUtils, PrivateChannelRecipientsInviteStore]
-        // mdls.forEach((mdl, idx) => {
-        //     if (!mdl) {
-        //         console.error(`[K2geLocker->init] Failed to get module: ${idx}`)
-        //     }
-        // })
-
         // コマンド追加
         this.commands = [lock, unlock]
 
@@ -157,28 +150,15 @@ const K2geLocker: Plugin = {
             )
         }
 
-        // 通知や起動時のModalを閉じる処理を止める
-        if (ModalDeprecatedStore) { // 164-
-             const modalCloseFuncs = ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]
-            modalCloseFuncs.forEach((key) => {
-                Patcher.instead(ModalDeprecatedStore, key, (self, args, org) => {
-                    if (!get(n, "_locked")) {
-                        org.apply(self, args)
-                    }
-                })
-            })
-        } else if (PrivateChannelRecipientsInviteStore) { // 170+
-            Patcher.instead(PrivateChannelRecipientsInviteStore, "popModal", (self, args, org) => {
+        // 通知や起動時のModalを閉じる処理を止める // PrivateChannelRecipientsInviteStore 170+ / ModalDeprecatedStore 164-
+        const [modalMdl, modalCloseFuncs] = [PrivateChannelRecipientsInviteStore, ["popModal", "popAllModals"]] ? PrivateChannelRecipientsInviteStore : [ModalDeprecatedStore, ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]]
+        modalCloseFuncs.forEach((key) => {
+            Patcher.instead(modalMdl, key, (self, args, org) => {
                 if (!get(n, "_locked")) {
                     org.apply(self, args)
                 }
             })
-            Patcher.instead(PrivateChannelRecipientsInviteStore, "popAllModals", (self, args, org) => {
-                if (!get(n, "_locked")) {
-                    org.apply(self, args)
-                }
-            })
-        }
+        })
 
         // 起動時のアプリロックを行う
         let isFirst = true
@@ -311,7 +291,7 @@ const K2geLocker: Plugin = {
         })
 
         // メッセージ表示ビュー
-        const Messages_ = Messages ? Messages : MessagesWrapper  // 163+対応
+        const Messages_ = Messages ? Messages : MessagesWrapper  // MessagesWrapper : 163+ / Messages : 162-
         Patcher.instead(Messages_, 'default', (self, args, org) => {
             let res = org.apply(self, args)
             let guild_id = res?.props?.guildId
