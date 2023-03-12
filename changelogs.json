@@ -13,5 +13,6 @@
   "1.3.2": "Added new option to persist server lock after unlocking.",
   "1.3.3": "Fixed the bug that channel messages were not updated correctly after unlocking",
   "1.3.4": "Fixed crash when it shows unlock screen on v163+",
-  "1.3.5": "Fixed app lock bypass(reported by Frog) and improved internal process."
+  "1.3.5": "Fixed app lock bypass(reported by Frog) and improved internal process.",
+  "1.3.7": "Added support for 170+ & fix for 164-"
 }
