@@ -1,7 +1,7 @@
 import {StyleSheet, Constants, Dialog, React, Toasts, Navigation} from 'enmity/metro/common'
 import {Plugin, registerPlugin} from 'enmity/managers/plugins'
 import {bulk, filters} from 'enmity/metro'
-import {Image, Text, View, Button} from 'enmity/components'
+import {Image, Text, View, Button, Modal} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
@@ -152,7 +152,7 @@ const K2geLocker: Plugin = {
         }
 
         // 通知や起動時のModalを閉じる処理を止める // PrivateChannelRecipientsInviteStore 170+ / ModalDeprecatedStore 164-
-        const [modalMdl, modalCloseFuncs] = [PrivateChannelRecipientsInviteStore, ["popModal", "popAllModals"]] ? PrivateChannelRecipientsInviteStore : [ModalDeprecatedStore, ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]]
+        const [modalMdl, modalCloseFuncs] = PrivateChannelRecipientsInviteStore ? [PrivateChannelRecipientsInviteStore, ["popModal", "popAllModals"]] : [ModalDeprecatedStore, ["MODAL_POP_ALL", "CHANGE_LOG_CLOSE", "CHANNEL_SETTINGS_CLOSE", "GUILD_SETTINGS_CLOSE", "EMAIL_VERIFICATION_MODAL_CLOSE", "NOTIFICATION_SETTINGS_MODAL_CLOSE", "SEARCH_MODAL_CLOSE", "USER_SETTINGS_MODAL_CLOSE", "MENTION_MODAL_CLOSE"]]
         modalCloseFuncs.forEach((key) => {
             Patcher.instead(modalMdl, key, (self, args, org) => {
                 if (!get(n, "_locked")) {
@@ -418,7 +418,7 @@ const K2geLocker: Plugin = {
         }
 
         // Discordのバージョン確認
-        if (version.localeCompare("158.0", undefined, {numeric: true}) < 0 && get(name,"compat") !== version) {
+        if (version.localeCompare("158.0", undefined, {numeric: true}) < 0 && get(name, "compat") !== version) {
             Dialog.show({
                 title: "K2geLocker",
                 body: `Your Discord version ${version} is not supported and some features may not work properly. Please update to 158+`,
@@ -436,7 +436,6 @@ const K2geLocker: Plugin = {
                 set(n, "passcode", undefined)
             }
         }
-        setTimeout(() => console.error(`[End]`), 3000)
     },
     onStop() {
         this.commands = []
