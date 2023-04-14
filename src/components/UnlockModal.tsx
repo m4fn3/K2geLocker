@@ -2,11 +2,11 @@ import {React, Navigation, NavigationNative, NavigationStack, StyleSheet, Consta
 import {Button, View, Image, Text, TouchableOpacity} from 'enmity/components'
 import {getIDByName} from "enmity/api/assets"
 import {filters, bulk} from 'enmity/metro'
-import {e} from "../utils/encryption"
 import {get, set} from "enmity/api/settings"
 
 // @ts-ignore
 import {name} from '../../manifest.json'
+import {e} from "../utils/encryption"
 
 export const Settings = NavigationStack.createStackNavigator()
 

@@ -5,11 +5,11 @@ import {getIDByName} from "enmity/api/assets"
 import {Linking} from "enmity/metro/common"
 import {reload} from "enmity/api/native"
 
-import {checkUpdate} from "../utils/update"
-import {Unlock} from "./UnlockModal";
 // @ts-ignore
 import {name, version} from '../../manifest.json'
-import {getByProps} from "enmity/modules";
+import {getByProps} from "enmity/modules"
+import {checkUpdate} from "../utils/update"
+import {Unlock} from "./UnlockModal"
 
 interface SettingsProps {
     settings: SettingsStore

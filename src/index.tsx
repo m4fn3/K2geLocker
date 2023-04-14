@@ -1,7 +1,7 @@
 import {StyleSheet, Constants, Dialog, React, Toasts, Navigation} from 'enmity/metro/common'
 import {Plugin, registerPlugin} from 'enmity/managers/plugins'
 import {bulk, filters} from 'enmity/metro'
-import {Image, Text, View, Button, Modal} from 'enmity/components'
+import {Image, Text, View, Button} from 'enmity/components'
 import {get, set} from 'enmity/api/settings'
 import {create} from 'enmity/patcher'
 import {getIDByName} from "enmity/api/assets"
