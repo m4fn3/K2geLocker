@@ -389,15 +389,17 @@ const K2geLocker: Plugin = {
 
         // ログアウト検知処理 - そのままログアウトした場合次回起動時にクラッシュしてしまうためログアウト時にプラグインを無効化する()
         Patcher.before(DeveloperOptionsStore, "LOGOUT", (self, args, res) => {
-            Dialog.show({
-                title: "K2geLocker",
-                body: "Automatically disabled itself to prevent app from causing problems!\nPlease enable plugin manually after you re-login to the account.",
-                confirmText: "See you again!"
-            })
-            this.commands = []
-            Patcher.unpatchAll()
-            // @ts-ignore
-            window.enmity.plugins.disablePlugin("K2geLocker")
+            if (!args[0].isSwitchingAccount) {
+                Dialog.show({
+                    title: "K2geLocker",
+                    body: "Automatically disabled itself to prevent app from causing problems!\nPlease enable plugin manually after you re-login to the account.",
+                    confirmText: "See you again!"
+                })
+                this.commands = []
+                Patcher.unpatchAll()
+                // @ts-ignore
+                window.enmity.plugins.disablePlugin("K2geLocker")
+            }
         })
 
         // K2genmity利用の可否を確認
