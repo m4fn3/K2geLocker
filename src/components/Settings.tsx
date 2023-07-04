@@ -17,7 +17,7 @@ interface SettingsProps {
 
 // variables
 const n = "Love K2ge3 lol"
-const K2genmityURL = "https://github.com/m4fn3/K2geLocker/blob/master/K2genmity.md"
+const K2genmityURL = "https://github.com/m4fn3/K2genmity/blob/master/README.md#installation"
 const StarIcon = getIDByName('img_nitro_star')
 const FailIcon = getIDByName('Small')
 const GitHubIcon = getIDByName('img_account_sync_github_white')
